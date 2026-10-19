@@ -1,28 +1,24 @@
 """Play: two people share one computer, or a person plays against an AI agent."""
 
-import time
-
 import pygame
 
 from schlurp.agents import Agent, make_agent
-from schlurp.engine import EMPTY, JUMP_TARGETS, NEIGHBOURS, Game, Move, Player, Position
-from schlurp.records import GameRecord, save_game
+from schlurp.engine import EMPTY, JUMP_TARGETS, NEIGHBOURS, Move, Player, Position
 from schlurp.ui.agent_thread import AgentThread
-from schlurp.ui.board_view import BACKGROUND, HEIGHT, LOOKS, TEXT, TEXT_SOFT, BoardView, MoveAnimation, cell_at
+from schlurp.ui.board_view import BACKGROUND, HEIGHT, LOOKS, TEXT, TEXT_SOFT, cell_at
+from schlurp.ui.game_screen import PANEL_WIDTH, PANEL_X, PERSON, GameScreen, describe, move_words, wrap
 from schlurp.ui.widgets import Button
 
 HELP = "Click a pawn, then a cell. Or click an empty cell next to your pawns to clone there."
 KEYS = ("Keys: U undo, N new, M menu,", "H hint, Esc quit")  # two lines, split by hand so no key loses its word
-PANEL_X = 720  # the side panel, right of the lens
-PANEL_WIDTH = 255
 KEYS_TOP = HEIGHT - 112  # the lines about the keys, just above the buttons
 MOVES_SHOWN = 10
-# How a person is named in the menu and in game records.
-PERSON = "Person"
 # An AI's move waits at least this long (seconds) after it starts thinking, so you see your own move land first.
 AI_MOVE_DELAY = 0.7
 # The agent that suggests a move when the person asks for a hint. A stronger one once we have it.
 HINT_AGENT = "Greedy"
+
+__all__ = ["PERSON", "PlayScreen", "describe", "movable_pawns", "reachable", "wrap"]
 
 
 def movable_pawns(position: Position) -> set[int]:
@@ -46,31 +42,7 @@ def reachable(position: Position, pawn: int) -> dict[int, Move]:
     return targets
 
 
-def move_words(move: Move) -> str:
-    """A move in words, like "clone to b6" or "jump from a7 to c5"."""
-    if move.is_jump:
-        return f"jump from {str(move)[:2]} to {str(move)[2:]}"
-    return f"clone to {move}"
-
-
-def describe(before: Position, move: Move, after: Position, names: dict[Player, str] | None = None) -> str:
-    """One line about a move, like "Blue jumped from a7 to c5 and infected 2."."""
-    names = names or {player: player.name.title() for player in Player}
-    mover = before.to_move
-    if move.is_jump:
-        text = f"{names[mover]} jumped from {str(move)[:2]} to {str(move)[2:]}"
-    else:
-        text = f"{names[mover]} cloned to {move}"
-    infected = before.pawns(mover.opponent) - after.pawns(mover.opponent)
-    if infected:
-        text += f" and infected {infected}"
-    text += "."
-    if after.to_move is mover and not after.ends_game():
-        text += f" {names[mover.opponent]} cannot move and passes."
-    return text
-
-
-class PlayScreen:
+class PlayScreen(GameScreen):
     """One Play game: turns clicks into moves, lets AI agents move, and draws the window."""
 
     def __init__(
@@ -79,12 +51,6 @@ class PlayScreen:
         first: Player = Player.BLUE,
         ai_move_delay: float = AI_MOVE_DELAY,
     ):
-        # The AI agent for each player, or None where a person clicks the board.
-        self.players = players or {Player.BLUE: None, Player.GREEN: None}
-        self.first = first
-        self.ai_move_delay = ai_move_delay
-        self.view = BoardView()
-        self.hover: tuple[int, int] | None = None
         width, gap, top = 60, 5, HEIGHT - 66
         self.undo_button, self.new_game_button, self.menu_button, self.hint_button = (
             Button(pygame.Rect(PANEL_X + i * (width + gap), top, width, 44), label)
@@ -92,22 +58,14 @@ class PlayScreen:
         )
         # Its own agent, never one of the players, so a hint and an AI's move never share an agent.
         self.hint_agent = make_agent(HINT_AGENT)
-        self.thinking: AgentThread | None = None  # the AI agent choosing a move right now
         self.hint_thinking: AgentThread | None = None  # the hint agent choosing a move for the person
         self.hint: Move | None = None  # the move the hint agent suggests, shown on the board
-        self.new_game()
+        super().__init__(players or {Player.BLUE: None, Player.GREEN: None}, first, ai_move_delay)
 
     def new_game(self) -> None:
-        self.stop_thinking()
         self.drop_hint()
-        self.game = Game(first=self.first)
+        super().new_game()
         self.selected: int | None = None  # the pawn the person clicked, waiting for a target
-        self.message = ""
-        self.animation: MoveAnimation | None = None
-
-    @property
-    def agent_to_move(self) -> Agent | None:
-        return self.players[self.game.position.to_move]
 
     @property
     def persons_turn(self) -> bool:
@@ -162,49 +120,19 @@ class PlayScreen:
             self.selected = None
 
     def play(self, move: Move) -> None:
-        before = self.game.position
-        self.game.play(move)
         self.selected = None
         self.drop_hint()
-        names = {player: self.player_name(player) for player in Player}
-        self.message = describe(before, move, self.game.position, names)
-        self.animation = MoveAnimation(before, move, time.monotonic())
-        if self.game.is_over:
-            self.save_record()
-
-    def save_record(self) -> None:
-        """Save the finished game in records/games. If you undo and finish it again, that is saved too.
-
-        A game from a set-up position (only tests make those) is not saved: its moves alone do not tell the game.
-        """
-        start = self.game.positions[0]
-        if start != Position.start(start.to_move):
-            return
-        save_game(GameRecord.of(self.game, self.agent_name(Player.BLUE), self.agent_name(Player.GREEN)))
+        super().play(move)
 
     def update(self) -> None:
-        """Called every frame. Starts an AI thinking when it is its turn, and plays its move when it is ready.
-
-        Also shows a hint once the hint agent has chosen its move.
-        """
+        """Called every frame. Shows a hint once the hint agent has chosen its move, and lets an AI move."""
         if self.hint_thinking and self.hint_thinking.is_done:
             thinking, self.hint_thinking = self.hint_thinking, None
             if thinking.error:
                 raise thinking.error
             self.hint = thinking.thoughts.move
             self.message = f"Hint from {HINT_AGENT}: {move_words(self.hint)}."
-        if self.game.is_over or self.agent_to_move is None:
-            return
-        if self.thinking is None:
-            self.thinking = AgentThread(self.agent_to_move, self.game)
-            return
-        if not self.thinking.is_done:
-            return
-        if self.thinking.error:
-            raise self.thinking.error
-        if time.monotonic() - self.thinking.started >= self.ai_move_delay:
-            thinking, self.thinking = self.thinking, None
-            self.play(thinking.thoughts.move)
+        super().update()
 
     def undo(self) -> None:
         """Take back moves until a person is to move: one move between two people,
@@ -245,36 +173,9 @@ class PlayScreen:
             self.hint_thinking = None
         self.hint = None
 
-    def stop_thinking(self) -> None:
-        """Cancel the AI's move, if one is thinking, and forget it (see docs/adr/0004)."""
-        if self.thinking:
-            self.thinking.cancel()
-            self.thinking = None
-
     def open_menu(self):
-        from schlurp.ui.menu import MenuScreen  # imported here because the menu imports this file
-
-        self.stop_thinking()
         self.drop_hint()
-        return MenuScreen({player: self.agent_name(player) for player in Player}, self.first)
-
-    def agent_name(self, player: Player) -> str:
-        agent = self.players[player]
-        return agent.name if agent else PERSON
-
-    def player_name(self, player: Player) -> str:
-        agent = self.players[player]
-        return f"{player.name.title()} ({agent.name})" if agent else player.name.title()
-
-    def status(self) -> str:
-        result = self.game.result
-        if result is None:
-            to_move = self.player_name(self.game.position.to_move)
-            return f"{to_move} is thinking..." if self.agent_to_move else f"{to_move} to move"
-        blue, green = result.score
-        if result.winner is None:
-            return f"Draw, {blue} to {green} ({result.ended_by})"
-        return f"{self.player_name(result.winner)} wins, {max(blue, green)} to {min(blue, green)}"
+        return super().open_menu()
 
     @property
     def wants_hand_cursor(self) -> bool:
@@ -312,35 +213,14 @@ class PlayScreen:
             animation=self.animation,
             hint=self.hint,
         )
-        self._draw_panel(surface)
+        self.draw_panel_top(surface)
+        self._draw_moves(surface, 310)
+        self.draw_lines(surface, wrap(HELP, self.view.font_small, PANEL_WIDTH), HEIGHT - 178, spacing=20)
+        self.draw_lines(surface, KEYS, KEYS_TOP)
         self.undo_button.draw(surface, self.view.font_small, self.hover, enabled=self._undo_target() is not None)
         self.new_game_button.draw(surface, self.view.font_small, self.hover)
         self.menu_button.draw(surface, self.view.font_small, self.hover)
         self.hint_button.draw(surface, self.view.font_small, self.hover, enabled=self.can_ask_hint)
-
-    def _draw_panel(self, surface: pygame.Surface) -> None:
-        """The side panel: the title, each player's pawns, whose turn it is, the last move, and the list of moves."""
-        view, now = self.view, time.monotonic()
-        surface.blit(view.font_big.render("Schlurp", True, TEXT), (PANEL_X, 24))
-        position = self.game.position
-        over = position.ends_game()
-        for i, player in enumerate(Player):
-            y = 100 + i * 56
-            if not over and player is position.to_move:
-                pygame.draw.rect(surface, (40, 48, 52), pygame.Rect(PANEL_X - 8, y - 24, 258, 48), border_radius=10)
-            view.draw_microbe(surface, (PANEL_X + 18, y), 16, LOOKS[player], now, i)
-            surface.blit(view.font.render(self.player_name(player), True, TEXT), (PANEL_X + 46, y - 10))
-            count = view.font_big.render(str(position.pawns(player)), True, TEXT)
-            surface.blit(count, count.get_rect(midright=(PANEL_X + 240, y)))
-        for i, line in enumerate(wrap(self.status(), view.font, 255)):
-            surface.blit(view.font.render(line, True, TEXT), (PANEL_X, 190 + i * 24))
-        for i, line in enumerate(wrap(self.message, view.font_small, 255)):
-            surface.blit(view.font_small.render(line, True, TEXT_SOFT), (PANEL_X, 242 + i * 20))
-        self._draw_moves(surface, 310)
-        for i, line in enumerate(wrap(HELP, view.font_small, PANEL_WIDTH)):
-            surface.blit(view.font_small.render(line, True, TEXT_SOFT), (PANEL_X, HEIGHT - 178 + i * 20))
-        for i, line in enumerate(KEYS):
-            surface.blit(view.font_small.render(line, True, TEXT_SOFT), (PANEL_X, KEYS_TOP + i * 18))
 
     def _draw_moves(self, surface: pygame.Surface, top: int) -> None:
         """The last moves, numbered, each with a dot in the mover's colour."""
@@ -353,16 +233,3 @@ class PlayScreen:
             surface.blit(view.font_small.render(f"{k + 1}.", True, TEXT_SOFT), (PANEL_X, y))
             pygame.draw.circle(surface, LOOKS[mover].body, (PANEL_X + 48, y + 7), 6)
             surface.blit(view.font_small.render(str(self.game.moves[k]), True, TEXT), (PANEL_X + 62, y))
-
-
-def wrap(text: str, font: pygame.font.Font, width: int) -> list[str]:
-    """Split text into lines no wider than `width` pixels."""
-    lines, line = [], ""
-    for word in text.split():
-        candidate = f"{line} {word}".strip()
-        if font.size(candidate)[0] <= width or not line:
-            line = candidate
-        else:
-            lines.append(line)
-            line = word
-    return lines + [line] if line else lines

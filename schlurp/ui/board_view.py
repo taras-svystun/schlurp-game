@@ -75,10 +75,13 @@ class MoveAnimation:
     before: Position
     move: Move
     started: float  # time.monotonic() when the move was played
+    seconds: float = ANIMATION_SECONDS  # shorter when Watch runs fast
 
     def progress(self, now: float) -> float:
         """0.0 when the move was just played, 1.0 when the animation is over."""
-        return min(1.0, (now - self.started) / ANIMATION_SECONDS)
+        if self.seconds <= 0:
+            return 1.0
+        return min(1.0, (now - self.started) / self.seconds)
 
 
 def blend(a: tuple[int, int, int], b: tuple[int, int, int], share: float) -> tuple[int, int, int]:
