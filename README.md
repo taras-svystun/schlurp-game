@@ -22,7 +22,7 @@ Run the second line again after pulling new code, in case new packages were adde
 .venv/bin/schlurp play
 ```
 
-A start menu opens first. For Blue and for Green, pick Person or an AI agent (Random or Greedy, see [AI agents](#ai-agents)), pick who moves first, and press Start or Enter.
+A start menu opens first. For Blue and for Green, pick Person or an AI agent (Random, Greedy or AlphaBeta, see [AI agents](#ai-agents)), pick who moves first, and press Start or Enter.
 Two people can share the computer, or you can play against an AI. With an AI agent on both sides, Start opens [Watch](#watch) instead.
 
 - Click one of your pawns. The cells it can reach light up: a solid ring is a clone (a new pawn next to it), a dashed ring is a jump (the pawn moves 2 cells and leaves its cell empty). Click one of them to move there.
@@ -32,7 +32,7 @@ Two people can share the computer, or you can play against an AI. With an AI age
 - The orange ring shows the last move, and a dot the cell a jump left. The panel on the right shows each player's pawns, whose turn it is, what the last move did and the list of moves.
 - An AI agent thinks while the window keeps drawing, and plays its move at least 0.7 seconds after yours, so you see your own move land first.
 
-- Press H or the Hint button when you are stuck: Greedy (see [AI agents](#ai-agents)) thinks for you, and its move pulses on the board: a yellow ring on the cell to move to, and for a jump a line from the pawn that jumps. It only shows the move; you still play it, or another one. The hint goes away after any move or Undo.
+- Press H or the Hint button when you are stuck: AlphaBeta (see [AI agents](#ai-agents)) thinks for you, and its move pulses on the board: a yellow ring on the cell to move to, and for a jump a line from the pawn that jumps. It only shows the move; you still play it, or another one. The hint goes away after any move or Undo.
 
 Keys: U or Backspace undoes (one move between two people, or back to your last turn against an AI), N starts a new game with the same players, M goes back to the menu, H shows a hint, Esc quits. The Undo, New, Menu and Hint buttons do the same.
 
@@ -45,11 +45,13 @@ Two AI agents play each other in a window, and you see what each one thinks befo
 ```sh
 .venv/bin/schlurp watch Greedy Random
 .venv/bin/schlurp watch Greedy Greedy --first green     # Green moves first
+.venv/bin/schlurp watch AlphaBeta Greedy                 # AlphaBeta looks 3 moves ahead
+.venv/bin/schlurp watch AlphaBeta:2 AlphaBeta            # depth 2 against depth 3
 ```
 
 The first agent plays Blue, the second Green. You can also pick an AI agent for both players in the start menu (`.venv/bin/schlurp play`).
 
-- **Move scores** (on the board): each cell a move can land on shows the best score of those moves, from the point of view of the player to move. The chosen move is yellow; for a jump a line shows which pawn jumps. Greedy's score is the pawn difference after the move. Random gives no scores.
+- **Move scores** (on the board): each cell a move can land on shows the best score of those moves, from the point of view of the player to move. The chosen move is yellow; for a jump a line shows which pawn jumps. Greedy's score is the pawn difference after the move; AlphaBeta's is the pawn difference it expects after looking ahead, or ±100 and more for a won or lost game. Random gives no scores.
 - **Expected line**: the moves the agent expects next, starting with its own.
 - **Work done**: how many positions it looked at, how many moves ahead, and how long it took.
 
@@ -105,13 +107,16 @@ print(game.positions[10])                             # the board after 10 moves
 Each agent is explained in its own file in [docs/agents](docs/agents):
 
 - **Random** ([random.md](docs/agents/random.md)): plays any legal move. The baseline every other agent must beat.
-- **Greedy** ([greedy.md](docs/agents/greedy.md)): looks one move ahead and plays the move with the best pawn difference. Wins 499 games of 500 against Random. It also gives the hints in Play.
+- **Greedy** ([greedy.md](docs/agents/greedy.md)): looks one move ahead and plays the move with the best pawn difference. Wins 499 games of 500 against Random.
+- **AlphaBeta** ([alphabeta.md](docs/agents/alphabeta.md)): looks 3 moves ahead (my move, the answer, my next move), expects the opponent's best answer, and skips the lines that cannot change its choice. It gives the hints in Play. Set the depth after a colon: `AlphaBeta:2` is faster, `AlphaBeta:4` takes seconds per move. `AlphaBeta:3:pawns` names the heuristic too (`pawns` is the only one so far).
 
 Compare any two of them:
 
 ```sh
 .venv/bin/schlurp tournament Greedy Random
 .venv/bin/schlurp tournament Greedy Greedy
+.venv/bin/schlurp tournament AlphaBeta:2 Greedy
+.venv/bin/schlurp tournament AlphaBeta Greedy --openings 100     # about 2 minutes: depth 3 takes 0.15 s per move
 ```
 
 ## Run the tests
@@ -120,7 +125,7 @@ Compare any two of them:
 .venv/bin/pytest
 ```
 
-This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 25 seconds.
+This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 31 seconds.
 
 Only the quick rule tests, without the reference:
 
@@ -137,7 +142,7 @@ Only the window tests (no real window opens):
 Only the agents' tests:
 
 ```sh
-.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py
+.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py tests/test_alphabeta_agent.py
 ```
 
 Only the tournament and game record tests:

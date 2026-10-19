@@ -116,3 +116,19 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - The slider works like a volume knob: each step along it multiplies the speed by the same amount, from 5 seconds to 0.05.
 - Watch refuses one agent object for both players: each needs its own random generator, and since `docs/adr/0004` one object would also make the two players wait for each other.
 - The control tests check that every button label fits its button; they caught "Resume (Space)", so the button now says "Resume (P)" (Space still works).
+
+## Step 7: AlphaBeta with the pawns heuristic (2026-10-20)
+
+**What:** The AlphaBeta agent, which looks 3 moves ahead, and the `pawns` heuristic. It now gives the hints in Play. `docs/agents/alphabeta.md` explains it.
+
+**Why:** Greedy never looks at the opponent's answer, so it leaves holes and loses whole groups. Searching a few moves deep, expecting the opponent's best answer, is the first real step towards a strong agent.
+
+**How:**
+- `schlurp/agents/heuristics.py` holds `pawns` (my pawns minus the opponent's) and a `HEURISTICS` table, ready for step 8.
+- `AlphaBetaAgent` is Minimax with alpha-beta pruning. We wrote no plain Minimax agent (see CLAUDE.md); plain Minimax lives only in the tests, where AlphaBeta must give exactly its scores at depths 1, 2 and 3 on real positions.
+- A finished game is worth 100 plus the depth left, so a win beats any pawn count and a quick win beats a slow one. After a pass the same player moves again, so the search asks whose turn it is at every position.
+- Every root move is searched with the full window, so each gets its exact score for Watch and ties are broken at random. Pruning still saved 4.7 times the positions at depth 3.
+- The search checks `should_stop()` (see `docs/adr/0004`), so Undo, New and Menu stop it at once. This is the first agent that needs it.
+- `make_agent` takes options after colons: `AlphaBeta:2`, `AlphaBeta:3:pawns`.
+- Depth 3 by default: 0.15 s per move on average, 0.4 s at worst. Depth 4 takes 3 s on average and waits for move ordering in step 9.
+- Tournaments (depth 3 kept to 200 games, so each one stayed under 10 minutes): AlphaBeta:2 beats Greedy 92.4% ± 2.3%, AlphaBeta:3 beats Greedy 94.0% ± 3.3%, and AlphaBeta:3 beats AlphaBeta:2 89.5% ± 4.3%. Against a weak agent two strong ones look alike; head to head the extra depth shows.
