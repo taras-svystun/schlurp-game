@@ -66,7 +66,13 @@ After each agent step, run a tournament against the agents we already have, to s
 
 ## Later
 
-- A web version: the engine in JavaScript (or Python compiled for the browser), so two people can play Schlurp on a web page. Do not start it until the Python engine, the agents and the three modes are done.
+- **A web version, played online.** Pascal Peyremorte, who wrote the Delphi Schlurp, is Taras's friend and offers to host it on his website, so two people on different computers can play each other. It should get everything the Python version has: Play against AI agents, Watch, tournaments and game records. Do not start it until the Python engine, the agents and the three modes are done. What we know so far:
+  - Our engine and agents never import Pygame, so they can run behind any front end.
+  - Online play between two computers needs something in the middle that passes the moves on. The main choice is where the game and the agents run:
+    - **a Python server** (for example FastAPI with WebSockets) running our engine and agents, with a thin page in the browser. Reuses all our code; needs hosting that can run Python, and the agents use the server's CPU;
+    - **in the browser**: our Python with Pyodide (reuses the code, slower start and slower agents), or the engine and agents written again in JavaScript or TypeScript (fast, but the rules exist twice; our perft counts and game records would check that both agree). A small server is still needed to pass moves between two players.
+  - Game records are already JSON with moves in standard notation, so they work on a web page as they are.
+  - Open questions for Pascal: what his hosting can run (only static files, PHP, or Python), and whether he wants to work on it with us.
 - Outside Ataxx engines (over the UAI protocol, which the `ataxx` package speaks) as stronger opponents.
 - Blocked cells, as in tournament Ataxx.
 - A bitboard, if the profiler shows Deepening or MCTS need it (see `adr/0003`).
