@@ -4,6 +4,7 @@ import argparse
 import sys
 
 from schlurp.agents import AGENTS, make_agent
+from schlurp.engine import Player
 from schlurp.tournament import OPENING_MOVES, OPENINGS, default_workers, run_tournament
 
 
@@ -20,6 +21,14 @@ def main() -> None:
     parser = argparse.ArgumentParser(prog="schlurp", description="Schlurp: play people or AI, and compare AI agents.")
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("play", help="Open a window to play: two people on one computer, or a person against an AI.")
+
+    watch = commands.add_parser(
+        "watch",
+        help="Open a window where two AI agents play each other, with their thoughts on the board.",
+    )
+    watch.add_argument("blue", type=agent_name, help=f"the agent playing Blue: one of {', '.join(AGENTS)}")
+    watch.add_argument("green", type=agent_name, help="the agent playing Green")
+    watch.add_argument("--first", choices=["blue", "green"], default="blue", help="who moves first (default blue)")
 
     tournament = commands.add_parser(
         "tournament",
@@ -39,6 +48,12 @@ def main() -> None:
         from schlurp.ui.app import run  # imported here so other commands never load Pygame
 
         run()
+    elif args.command == "watch":
+        from schlurp.ui.app import run
+        from schlurp.ui.watch import WatchScreen
+
+        players = {Player.BLUE: make_agent(args.blue), Player.GREEN: make_agent(args.green)}
+        run(lambda: WatchScreen(players, Player[args.first.upper()]))
     elif args.command == "tournament":
         run_tournament_command(args)
 

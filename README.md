@@ -23,7 +23,7 @@ Run the second line again after pulling new code, in case new packages were adde
 ```
 
 A start menu opens first. For Blue and for Green, pick Person or an AI agent (Random or Greedy, see [AI agents](#ai-agents)), pick who moves first, and press Start or Enter.
-Two people can share the computer, or you can play against an AI. A game needs a person on at least one side: two AI agents playing each other will be Watch, in a later step.
+Two people can share the computer, or you can play against an AI. With an AI agent on both sides, Start opens [Watch](#watch) instead.
 
 - Click one of your pawns. The cells it can reach light up: a solid ring is a clone (a new pawn next to it), a dashed ring is a jump (the pawn moves 2 cells and leaves its cell empty). Click one of them to move there.
 - Or click an empty cell next to your pawns to clone there at once.
@@ -37,6 +37,25 @@ Two people can share the computer, or you can play against an AI. A game needs a
 Keys: U or Backspace undoes (one move between two people, or back to your last turn against an AI), N starts a new game with the same players, M goes back to the menu, H shows a hint, Esc quits. The Undo, New, Menu and Hint buttons do the same.
 
 Every finished game is saved, see [Game records](#game-records).
+
+## Watch
+
+Two AI agents play each other in a window, and you see what each one thinks before it moves:
+
+```sh
+.venv/bin/schlurp watch Greedy Random
+.venv/bin/schlurp watch Greedy Greedy --first green     # Green moves first
+```
+
+The first agent plays Blue, the second Green. You can also pick an AI agent for both players in the start menu (`.venv/bin/schlurp play`).
+
+- **Move scores** (on the board): each cell a move can land on shows the best score of those moves, from the point of view of the player to move. The chosen move is yellow; for a jump a line shows which pawn jumps. Greedy's score is the pawn difference after the move. Random gives no scores.
+- **Expected line**: the moves the agent expects next, starting with its own.
+- **Work done**: how many positions it looked at, how many moves ahead, and how long it took.
+
+Each part has a checkbox to hide it. The scores appear once the last move has landed, and the move is played after the time on the speed slider (from 5 seconds down to 0.05).
+
+Keys: Space or P pauses and resumes, S or → plays one move and stays paused, N starts a new game, M goes back to the menu, Esc quits. Every finished Watch game is saved, like Play games.
 
 ## Tournament
 
@@ -66,7 +85,7 @@ How to read the confidence interval: [docs/agents/random.md](docs/agents/random.
 
 Saved games are in the `records` folder of the project (git ignores it):
 
-- `records/games`: one JSON file for each finished Play game, the newest 100. If you undo and finish the game again, that is saved too.
+- `records/games`: one JSON file for each finished Play or Watch game, the newest 100. If you undo and finish the game again, that is saved too.
 - `records/tournaments`: one CSV file for each tournament run with `--save`, the newest 10. One row per game, with the whole game in the `record` column.
 
 A JSON file holds the players, who moved first, the moves (`b6 a1c3 ...`), the winner, the score and how the game ended. To look at a saved game in Python:
@@ -101,7 +120,7 @@ Compare any two of them:
 .venv/bin/pytest
 ```
 
-This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 21 seconds.
+This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 25 seconds.
 
 Only the quick rule tests, without the reference:
 
@@ -112,7 +131,7 @@ Only the quick rule tests, without the reference:
 Only the window tests (no real window opens):
 
 ```sh
-.venv/bin/pytest tests/test_play_window.py tests/test_play_against_ai.py tests/test_hint.py tests/test_agent_thread.py
+.venv/bin/pytest tests/test_play_window.py tests/test_play_against_ai.py tests/test_hint.py tests/test_agent_thread.py tests/test_watch.py
 ```
 
 Only the agents' tests:

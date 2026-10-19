@@ -15,6 +15,7 @@ from schlurp.records import load_game
 from schlurp.ui.board_view import HEIGHT, WIDTH, cell_center
 from schlurp.ui.menu import PERSON, MenuScreen
 from schlurp.ui.play import PlayScreen
+from schlurp.ui.watch import WatchScreen
 
 BLUE, GREEN = Player.BLUE, Player.GREEN
 
@@ -201,10 +202,13 @@ def test_the_menu_starts_a_game_with_the_chosen_players():
     assert screen.game.position.to_move is GREEN
 
 
-def test_the_menu_does_not_start_without_a_person():
+def test_the_menu_starts_watch_for_two_ai_agents():
     menu = MenuScreen()
-    click(menu, menu.player_buttons[(BLUE, "Random")].rect.center)
-    assert press(menu, pygame.K_RETURN) is menu
+    click(menu, menu.player_buttons[(BLUE, "Greedy")].rect.center)
+    click(menu, menu.player_buttons[(GREEN, "Greedy")].rect.center)
+    screen = press(menu, pygame.K_RETURN)
+    assert isinstance(screen, WatchScreen)
+    assert screen.players[BLUE] is not screen.players[GREEN]  # two agents, each with its own random generator
 
 
 def test_every_menu_button_fits_in_the_window():

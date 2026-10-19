@@ -37,6 +37,7 @@ class AgentThread:
         self.started = time.monotonic()
         self.thoughts: Thoughts | None = None
         self.seconds = 0.0  # how long the agent thought
+        self.finished = 0.0  # time.monotonic() when it was done; only valid once `is_done`
         self.error: Exception | None = None
         self._agent = agent
         self._cancelled = threading.Event()  # this thread's own, so cancelling it never stops another thread
@@ -60,6 +61,7 @@ class AgentThread:
             finally:
                 self._agent.stop = None
             self.seconds = time.perf_counter() - started
+            self.finished = time.monotonic()
 
     def cancel(self) -> None:
         """The move is no longer wanted. Returns at once; the thread ends as soon as the agent notices."""

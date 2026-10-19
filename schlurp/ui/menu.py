@@ -8,6 +8,7 @@ from schlurp.agents import AGENTS, make_agent
 from schlurp.engine import Player
 from schlurp.ui.board_view import BACKGROUND, LOOKS, TEXT, TEXT_SOFT, WIDTH, BoardView
 from schlurp.ui.play import PERSON, PlayScreen
+from schlurp.ui.watch import WatchScreen
 from schlurp.ui.widgets import Button
 
 ROW_Y = {Player.BLUE: 250, Player.GREEN: 330, "first": 410}
@@ -37,11 +38,6 @@ class MenuScreen:
         self.first_buttons = {player: Button(option_rect("first", i), player.name.title()) for i, player in enumerate(Player)}
         self.start_button = Button(pygame.Rect((WIDTH - 240) // 2, 500, 240, 56), "Start (Enter)")
 
-    @property
-    def can_start(self) -> bool:
-        """Play needs a person on at least one side. Two AI agents will be Watch (step 6)."""
-        return PERSON in self.choices.values()
-
     def handle(self, event: pygame.event.Event):
         """React to one event. Returns the screen to show next: this menu, or the game once it starts."""
         if event.type == pygame.MOUSEMOTION:
@@ -59,10 +55,16 @@ class MenuScreen:
             return self.start()
         return self
 
+    @property
+    def is_watch(self) -> bool:
+        """Two AI agents play each other in Watch. With a person on either side, it is Play."""
+        return PERSON not in self.choices.values()
+
     def start(self):
-        if not self.can_start:
-            return self
+        # make_agent builds a new agent for each player, even when both are the same kind (see WatchScreen).
         players = {player: None if name == PERSON else make_agent(name) for player, name in self.choices.items()}
+        if self.is_watch:
+            return WatchScreen(players, self.first)
         return PlayScreen(players, self.first)
 
     def update(self) -> None:
@@ -72,9 +74,7 @@ class MenuScreen:
     def wants_hand_cursor(self) -> bool:
         if not self.hover:
             return False
-        buttons = [*self.player_buttons.values(), *self.first_buttons.values()]
-        if self.can_start:
-            buttons.append(self.start_button)
+        buttons = [*self.player_buttons.values(), *self.first_buttons.values(), self.start_button]
         return any(button.contains(self.hover) for button in buttons)
 
     def draw(self, surface: pygame.Surface) -> None:
@@ -93,9 +93,9 @@ class MenuScreen:
             button.draw(surface, view.font_small, self.hover, selected=self.choices[player] == name)
         for player, button in self.first_buttons.items():
             button.draw(surface, view.font_small, self.hover, selected=self.first is player)
-        self.start_button.draw(surface, view.font, self.hover, enabled=self.can_start)
-        if self.can_start:
-            note = "With a person on either side, you play."
+        self.start_button.draw(surface, view.font, self.hover)
+        if self.is_watch:
+            note = "Two AI agents: you watch them play, with their thoughts."
         else:
-            note = "Two AI agents playing each other is Watch, which comes in a later step."
+            note = "With a person on either side, you play."
         view.blit_centered(surface, view.font_small, note, TEXT_SOFT, (WIDTH // 2, 590))

@@ -102,3 +102,17 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - The four buttons got short labels (Undo, New, Menu, Hint) to fit the panel; the keys are on two lines above them. A test checks that the buttons and the keys fit, and it caught the first version of the keys line running off the window.
 - The start menu now offers every agent in `AGENTS`, so a new agent shows up there by itself.
 - Greedy against Random: 499 of 500 games (99.8% ± 0.4%), 11 moves per game, nearly all ending with Random losing every pawn. Greedy against Greedy: 49.2% ± 4.4%, even; Blue won 272 of 500, so moving first may help a little when both players play well.
+
+## Step 6: Watch (2026-10-20)
+
+**What:** `schlurp watch A B`, or two AI agents in the start menu, opens a window where the agents play each other with their thoughts shown: move scores on the board, the expected line and the work done, each with a checkbox. Pause, Step and a speed slider control the game.
+
+**Why:** A tournament says which agent wins; Watch shows why. Seeing Greedy's scores on the board makes its choices, and its blind spots, easy to follow, and it will matter more for AlphaBeta and MCTS.
+
+**How:**
+- Play and Watch now share `schlurp/ui/game_screen.py`: the game, the AI thread, the message about each move, saving the record and the top of the side panel. `PlayScreen` keeps clicks, Undo and Hint; `WatchScreen` adds Pause, Step, the slider and the thoughts. This follows Awalé.
+- One clone and several jumps can land on the same cell, and a cell has room for one number, so each cell shows the best score of the moves landing there. The chosen move is yellow, with a line from the pawn for a jump, drawn like the hint in Play.
+- A move is played once the agent is done and the previous move has landed, plus the time on the slider. So the thoughts stay on the board for the same time whether an agent thinks for a microsecond or a second. At high speed the animation gets shorter too.
+- The slider works like a volume knob: each step along it multiplies the speed by the same amount, from 5 seconds to 0.05.
+- Watch refuses one agent object for both players: each needs its own random generator, and since `docs/adr/0004` one object would also make the two players wait for each other.
+- The control tests check that every button label fits its button; they caught "Resume (Space)", so the button now says "Resume (P)" (Space still works).
