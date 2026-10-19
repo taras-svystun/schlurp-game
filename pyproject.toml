@@ -1,0 +1,21 @@
+[project]
+name = "schlurp"
+version = "0.1.0"
+description = "Schlurp (Ataxx) on your computer: play people or AI, and build AI agents."
+requires-python = ">=3.11"
+dependencies = ["pygame>=2.5"]
+
+[project.optional-dependencies]
+# Only needed to run the tests. The `ataxx` package is our reference for the rules (see docs/adr/0001).
+# Pinned, because its author says its rules may still change.
+dev = ["pytest", "ataxx==2.2.0"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["schlurp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

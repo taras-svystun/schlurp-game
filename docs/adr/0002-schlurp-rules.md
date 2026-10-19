@@ -6,7 +6,7 @@ We follow Schlurp as Pascal Peyremorte wrote it (version 2.21, read from its Del
 - Blue starts on the top-left and bottom-right corners, Green on the other two. Blue moves first, unless the start menu says otherwise.
 - A move is a **clone** (a new pawn on an empty neighbour, the old one stays) or a **jump** (a pawn moves to an empty cell exactly 2 cells away, and its old cell becomes empty). Then every enemy pawn next to the landing cell is **infected**.
 - A player who cannot move **passes** automatically. A pass is not a move.
-- The game ends when the board is full, when a player has no pawns (at once, even with empty cells left), or when neither player can move. Without blocked cells the last one cannot happen, but the engine still checks it.
+- The game ends when the board is full, when a player has no pawns (at once, even with empty cells left), or when neither player can move. Without blocked cells the last one only happens in the first two cases (if no pawn is within 2 cells of an empty cell, its neighbours are empty too, and so on over the whole board), so the engine does not check it separately; the tests against the reference confirm it.
 - **Fifty-move rule** (from standard Ataxx, not in Peyremorte): when 100 moves in a row (50 by each player) are jumps, the game ends in a draw. Passes do not count.
 - Otherwise the player with more pawns wins, and equal counts are a draw.
 - Moves are written in standard Ataxx notation: columns a–g from left to right, rows 1–7 from bottom to top; a clone is its landing cell (`c3`), a jump is both cells (`a1c3`).
