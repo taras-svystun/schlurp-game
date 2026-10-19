@@ -30,3 +30,18 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - Then against the `ataxx` package: perft 16, 256, 6460, 155888 and 4752668 from the start, 150 random games compared after every move (with 18 passes and 6 wipe-outs), and 100 games of players who mostly jump without infecting, so that 99 of them end by the fifty-move rule. They all matched the first time.
 - Pawn counts after every move are checked too: a clone adds 1 plus the infected pawns, a jump only the infected ones, and nothing changes outside the landing cell, its neighbours and the cell a jump left.
 - Speed: perft(5) takes 2.4 s inside pytest, about twice the throwaway version from step 0. The profiler shows building the list of moves is most of the time; making `Move` named tuples and checking for a pass after each move add a little. We look at speed again in the Deepening step.
+
+## Step 2: Play for two people (2026-10-19)
+
+**What:** `schlurp play` opens a Pygame window where two people take turns on one computer. The board sits under a microscope lens, the pawns are blue and green microbes, and every move is animated: the pawn lands (a jumping pawn shrinks away from its cell), then the infected pawns change colour.
+
+**Why:** It is the first way to actually play the game, and the window code is the base for Play against AI and Watch later.
+
+**How:**
+- `schlurp/ui/board_view.py` knows where each cell is on the screen (a1 at the bottom left) and draws the lens, the grid, the microbes, the reachable cells and the last move. The lens is drawn once at the start, since it never changes. Microbes are wobbling polygons, drawn smooth with `pygame.gfxdraw`.
+- The animation only changes the drawing: the game already has the new position when the animation starts, so a test or an agent never waits for it. It lasts 0.45 s.
+- `schlurp/ui/play.py` turns clicks into moves: pick a pawn, see its targets (solid ring for a clone, dashed for a jump), click one. Clicking an empty cell next to your pawns clones at once, since all such clones are the same move. Pawns with no move are dimmed and cannot be picked.
+- A side panel shows each player's pawns, whose turn it is, a line about the last move (with "cannot move and passes" when it happens) and the last 10 moves.
+- `schlurp/cli.py` is the `schlurp` command. Only `play` exists for now. Pygame is loaded only when a window opens, and a test checks that `schlurp --help` does not load it.
+- The tests send fake clicks to the window with no real screen (SDL's "dummy" video driver), and draw every moment of a move, the middle of an animation included.
+- Undo, the start menu and Play against an AI come in step 3.

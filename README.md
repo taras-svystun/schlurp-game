@@ -5,8 +5,6 @@ No internet and no server needed.
 
 The rules we use and the words we use for them are in [CONTEXT.md](CONTEXT.md), and why we chose them in [docs/adr/0002-schlurp-rules.md](docs/adr/0002-schlurp-rules.md). The roadmap is in [docs/PLAN.md](docs/PLAN.md).
 
-There is no window yet: so far the project is the game engine and its tests.
-
 ## First-time setup
 
 Needs Python 3.11 or newer. Run this once, from the project folder:
@@ -18,18 +16,40 @@ python3 -m venv .venv
 
 Run the second line again after pulling new code, in case new packages were added.
 
+## Play
+
+```sh
+.venv/bin/schlurp play
+```
+
+A window opens for two people sharing the computer. Blue moves first.
+
+- Click one of your pawns. The cells it can reach light up: a solid ring is a clone (a new pawn next to it), a dashed ring is a jump (the pawn moves 2 cells and leaves its cell empty). Click one of them to move there.
+- Or click an empty cell next to your pawns to clone there at once.
+- Click the picked pawn again to drop it, or click another of your pawns to pick that one. Your pawns that cannot move are dimmed.
+- After the move, every enemy pawn next to the cell you landed on turns to your colour.
+- The orange ring shows the last move, and a dot the cell a jump left. The panel on the right shows each player's pawns, whose turn it is, what the last move did and the list of moves.
+
+Keys: N starts a new game, Esc quits. Undo, the start menu and playing against an AI come in the next step.
+
 ## Run the tests
 
 ```sh
 .venv/bin/pytest
 ```
 
-This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. It takes about 10 seconds.
+This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. It takes about 12 seconds.
 
 Only the quick rule tests, without the reference:
 
 ```sh
 .venv/bin/pytest tests/test_position.py tests/test_game.py
+```
+
+Only the window tests (no real window opens):
+
+```sh
+.venv/bin/pytest tests/test_play_window.py
 ```
 
 Only the tests against the reference:
