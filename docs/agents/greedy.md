@@ -13,7 +13,7 @@ It never thinks about what the opponent does next. That is its whole strength an
 
 Greedy is the first agent that *searches*, even if only one move deep. AlphaBeta (step 7) is the same idea, but it also looks at the opponent's answer, and at our answer to that, and so on.
 
-Greedy also gives the hints in Play (the H key): it is the strongest agent we have for now.
+Greedy gave the hints in Play (the H key) until AlphaBeta came in step 7.
 
 ## How the code works
 
