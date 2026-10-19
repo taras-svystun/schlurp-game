@@ -11,6 +11,7 @@ import pytest
 
 from schlurp.agents import Agent, RandomAgent
 from schlurp.engine import Player, cell_index
+from schlurp.records import load_game
 from schlurp.ui.board_view import HEIGHT, WIDTH, cell_center
 from schlurp.ui.menu import PERSON, MenuScreen
 from schlurp.ui.play import PlayScreen
@@ -171,6 +172,21 @@ def test_random_plays_a_whole_game_against_itself_through_the_window():
     while not screen.game.is_over:
         let_ai_move(screen)
     assert "wins" in screen.status() or "Draw" in screen.status()
+
+
+def test_a_finished_game_is_saved_as_a_game_record(records_in_a_temporary_folder):
+    screen = against(RandomAgent(seed=2), person=GREEN, first=GREEN)
+    person = RandomAgent(seed=1)  # plays the person's moves through the screen
+    while not screen.game.is_over:
+        if screen.persons_turn:
+            screen.play(person.choose_move(screen.game.position))
+        else:
+            let_ai_move(screen)
+
+    [path] = (records_in_a_temporary_folder / "games").iterdir()
+    record = load_game(path)
+    assert (record.blue, record.green, record.first) == ("Random", PERSON, GREEN)
+    assert record.replay().positions == screen.game.positions
 
 
 def test_the_menu_starts_a_game_with_the_chosen_players():

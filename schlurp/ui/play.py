@@ -6,6 +6,7 @@ import pygame
 
 from schlurp.agents import Agent
 from schlurp.engine import EMPTY, JUMP_TARGETS, NEIGHBOURS, Game, Move, Player, Position
+from schlurp.records import GameRecord, save_game
 from schlurp.ui.agent_thread import AgentThread
 from schlurp.ui.board_view import BACKGROUND, HEIGHT, LOOKS, TEXT, TEXT_SOFT, BoardView, MoveAnimation, cell_at
 from schlurp.ui.widgets import Button
@@ -146,6 +147,18 @@ class PlayScreen:
         names = {player: self.player_name(player) for player in Player}
         self.message = describe(before, move, self.game.position, names)
         self.animation = MoveAnimation(before, move, time.monotonic())
+        if self.game.is_over:
+            self.save_record()
+
+    def save_record(self) -> None:
+        """Save the finished game in records/games. If you undo and finish it again, that is saved too.
+
+        A game from a set-up position (only tests make those) is not saved: its moves alone do not tell the game.
+        """
+        start = self.game.positions[0]
+        if start != Position.start(start.to_move):
+            return
+        save_game(GameRecord.of(self.game, self.agent_name(Player.BLUE), self.agent_name(Player.GREEN)))
 
     def update(self) -> None:
         """Called every frame. Starts an AI thinking when it is its turn, and plays its move when it is ready."""

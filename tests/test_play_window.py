@@ -139,7 +139,7 @@ def test_a_pass_is_shown_in_the_message(screen):
     assert screen.status() == "Blue to move"
 
 
-def test_the_end_of_the_game_is_shown_and_clicks_stop(screen):
+def test_the_end_of_the_game_is_shown_and_clicks_stop(screen, records_in_a_temporary_folder):
     picture = """
         . . . . . . .
         . . . . . . .
@@ -155,6 +155,7 @@ def test_the_end_of_the_game_is_shown_and_clicks_stop(screen):
     assert screen.status() == "Blue wins, 2 to 0"
     click(screen, "e3")
     assert screen.selected is None
+    assert not records_in_a_temporary_folder.exists()  # a game from a set-up position is not saved
 
 
 def test_n_starts_a_new_game(screen):
