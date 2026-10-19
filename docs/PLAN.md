@@ -56,7 +56,7 @@ Words in **bold** are defined in `../CONTEXT.md`.
 - [x] 2. Play for two people in Pygame, with the microscope look, and a README with run commands.
 - [x] 3. Agent interface, the Random agent, Play against AI, Undo.
 - [x] 4. Tournament and game records. Random vs Random should give about 50/50.
-- [ ] 5. Greedy agent and the Hint button, then a tournament.
+- [x] 5. Greedy agent and the Hint button, then a tournament.
 - [ ] 6. Watch with the thoughts panel.
 - [ ] 7. AlphaBeta with the `pawns` heuristic, then a tournament.
 - [ ] 8. Better heuristics: mobility, safe pawns, exposed cells, holes; then tournaments to choose the weights.

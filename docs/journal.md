@@ -89,3 +89,16 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `AgentThread.cancel()` sets an event that only that thread has. The agent reads it through `Agent.should_stop()`; a long search will check it and return at once. A thread cancelled before it got the lock never calls the agent.
 - New tests in `tests/test_agent_thread.py` use an agent that thinks until told to stop and counts how many threads are inside it. On the old code the main test fails with two threads inside the agent; now it is always one. The thread tests passed 20 runs out of 20.
 - We moved Greedy before Watch: Watch is mostly the thoughts panel, and Random has no thoughts to show.
+
+## Step 5: Greedy and the Hint button (2026-10-20)
+
+**What:** The Greedy agent, a Hint button in Play, and tournaments against Random and itself. `docs/agents/greedy.md` explains Greedy.
+
+**Why:** Greedy is the first agent that looks ahead, even if only one move, and the first one with thoughts to show. It is the agent we need for hints, and for building the thoughts panel of Watch next.
+
+**How:**
+- `GreedyAgent.think` tries every legal move and scores it by the pawn difference after it, choosing at random between equal moves. A clone gains `1 + 2k` and a jump `2k` for `k` infected pawns, so it jumps only when a jump infects more.
+- Hint: H or the Hint button asks a Greedy agent of its own (never one of the players) in a background thread, and the board shows its move with a pulsing ring, and a line for a jump. The hint is cancelled or dropped on any move, Undo, New or Menu.
+- The four buttons got short labels (Undo, New, Menu, Hint) to fit the panel; the keys are on two lines above them. A test checks that the buttons and the keys fit, and it caught the first version of the keys line running off the window.
+- The start menu now offers every agent in `AGENTS`, so a new agent shows up there by itself.
+- Greedy against Random: 499 of 500 games (99.8% ± 0.4%), 11 moves per game, nearly all ending with Random losing every pawn. Greedy against Greedy: 49.2% ± 4.4%, even; Blue won 272 of 500, so moving first may help a little when both players play well.

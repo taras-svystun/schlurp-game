@@ -113,11 +113,13 @@ class BoardView:
         last_move: Move | None = None,
         animation: MoveAnimation | None = None,
         now: float | None = None,
+        hint: Move | None = None,
     ) -> None:
         """Draw the lens, the board and the pawns.
 
         `targets` are the cells the selected pawn can reach, with the move for each.
         `movable` are the pawns of the person to move that have a move; their other pawns are dimmed.
+        `hint` is a move to suggest to the person, drawn as a pulsing ring (and a line from the pawn, for a jump).
         """
         now = time.monotonic() if now is None else now
         targets = targets or {}
@@ -140,6 +142,8 @@ class BoardView:
             self._draw_target(surface, cell, move.is_jump, LOOKS[position.to_move], hover == cell)
         if hover is not None and hover not in targets and hover != selected and movable and hover in movable:
             pygame.draw.circle(surface, HIGHLIGHT, cell_center(hover), PAWN_RADIUS + 5, width=2)
+        if hint is not None:
+            self._draw_hint(surface, hint, now)
 
     def _make_lens(self) -> pygame.Surface:
         """The round field of view with its metal ring. Drawn once, since it never changes."""
@@ -227,6 +231,19 @@ class BoardView:
             start = 2 * math.pi * i / 12
             rect = pygame.Rect(center[0] - radius, center[1] - radius, 2 * radius, 2 * radius)
             pygame.draw.arc(surface, colour, rect, start, start + math.pi / 12, width=3)
+
+    def _draw_hint(self, surface: pygame.Surface, move: Move, now: float) -> None:
+        """A suggested move: a ring that pulses on the target cell, and for a jump a line from the pawn that jumps.
+
+        A clone has no pawn to point at: any of your pawns next to the target gives the same move.
+        """
+        target = cell_center(move.target)
+        pulse = 0.5 + 0.5 * math.sin(now * 6)
+        if move.source is not None:
+            source = cell_center(move.source)
+            pygame.draw.line(surface, HIGHLIGHT, source, target, width=3)
+            pygame.draw.circle(surface, HIGHLIGHT, source, PAWN_RADIUS + 5, width=3)
+        pygame.draw.circle(surface, HIGHLIGHT, target, round(PAWN_RADIUS - 6 + 6 * pulse), width=4)
 
     def _dim(self, surface: pygame.Surface, cell: int) -> None:
         shade = pygame.Surface((2 * PAWN_RADIUS + 6, 2 * PAWN_RADIUS + 6), pygame.SRCALPHA)

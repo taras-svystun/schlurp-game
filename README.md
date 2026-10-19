@@ -22,7 +22,7 @@ Run the second line again after pulling new code, in case new packages were adde
 .venv/bin/schlurp play
 ```
 
-A start menu opens first. For Blue and for Green, pick Person or an AI agent (only Random for now, see [AI agents](#ai-agents)), pick who moves first, and press Start or Enter.
+A start menu opens first. For Blue and for Green, pick Person or an AI agent (Random or Greedy, see [AI agents](#ai-agents)), pick who moves first, and press Start or Enter.
 Two people can share the computer, or you can play against an AI. A game needs a person on at least one side: two AI agents playing each other will be Watch, in a later step.
 
 - Click one of your pawns. The cells it can reach light up: a solid ring is a clone (a new pawn next to it), a dashed ring is a jump (the pawn moves 2 cells and leaves its cell empty). Click one of them to move there.
@@ -32,7 +32,9 @@ Two people can share the computer, or you can play against an AI. A game needs a
 - The orange ring shows the last move, and a dot the cell a jump left. The panel on the right shows each player's pawns, whose turn it is, what the last move did and the list of moves.
 - An AI agent thinks while the window keeps drawing, and plays its move at least 0.7 seconds after yours, so you see your own move land first.
 
-Keys: U or Backspace undoes (one move between two people, or back to your last turn against an AI), N starts a new game with the same players, M goes back to the menu, Esc quits. The Undo, New and Menu buttons do the same.
+- Press H or the Hint button when you are stuck: Greedy (see [AI agents](#ai-agents)) thinks for you, and its move pulses on the board: a yellow ring on the cell to move to, and for a jump a line from the pawn that jumps. It only shows the move; you still play it, or another one. The hint goes away after any move or Undo.
+
+Keys: U or Backspace undoes (one move between two people, or back to your last turn against an AI), N starts a new game with the same players, M goes back to the menu, H shows a hint, Esc quits. The Undo, New, Menu and Hint buttons do the same.
 
 Every finished game is saved, see [Game records](#game-records).
 
@@ -84,6 +86,14 @@ print(game.positions[10])                             # the board after 10 moves
 Each agent is explained in its own file in [docs/agents](docs/agents):
 
 - **Random** ([random.md](docs/agents/random.md)): plays any legal move. The baseline every other agent must beat.
+- **Greedy** ([greedy.md](docs/agents/greedy.md)): looks one move ahead and plays the move with the best pawn difference. Wins 499 games of 500 against Random. It also gives the hints in Play.
+
+Compare any two of them:
+
+```sh
+.venv/bin/schlurp tournament Greedy Random
+.venv/bin/schlurp tournament Greedy Greedy
+```
 
 ## Run the tests
 
@@ -91,7 +101,7 @@ Each agent is explained in its own file in [docs/agents](docs/agents):
 .venv/bin/pytest
 ```
 
-This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 18 seconds.
+This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 21 seconds.
 
 Only the quick rule tests, without the reference:
 
@@ -102,13 +112,13 @@ Only the quick rule tests, without the reference:
 Only the window tests (no real window opens):
 
 ```sh
-.venv/bin/pytest tests/test_play_window.py tests/test_play_against_ai.py
+.venv/bin/pytest tests/test_play_window.py tests/test_play_against_ai.py tests/test_hint.py tests/test_agent_thread.py
 ```
 
 Only the agents' tests:
 
 ```sh
-.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py
+.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py
 ```
 
 Only the tournament and game record tests:
