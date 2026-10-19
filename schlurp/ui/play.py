@@ -79,14 +79,15 @@ class PlayScreen:
             Button(pygame.Rect(PANEL_X + i * (width + gap), top, width, 44), label)
             for i, label in enumerate(["Undo (U)", "New (N)", "Menu (M)"])
         )
+        self.thinking: AgentThread | None = None  # the AI agent choosing a move right now
         self.new_game()
 
     def new_game(self) -> None:
+        self.stop_thinking()
         self.game = Game(first=self.first)
         self.selected: int | None = None  # the pawn the person clicked, waiting for a target
         self.message = ""
         self.animation: MoveAnimation | None = None
-        self.thinking: AgentThread | None = None  # the AI agent choosing a move right now
 
     @property
     def agent_to_move(self) -> Agent | None:
@@ -183,7 +184,7 @@ class PlayScreen:
             return
         while len(self.game.moves) > target:
             self.game.undo()
-        self.thinking = None  # if an AI was thinking, its move is no longer wanted
+        self.stop_thinking()  # if an AI was thinking, its move is no longer wanted
         self.selected = None
         self.animation = None
         self.message = ""
@@ -197,8 +198,16 @@ class PlayScreen:
                 return moves
         return None
 
+    def stop_thinking(self) -> None:
+        """Cancel the AI's move, if one is thinking, and forget it (see docs/adr/0004)."""
+        if self.thinking:
+            self.thinking.cancel()
+            self.thinking = None
+
     def open_menu(self):
         from schlurp.ui.menu import MenuScreen  # imported here because the menu imports this file
+
+        self.stop_thinking()
 
         return MenuScreen({player: self.agent_name(player) for player in Player}, self.first)
 

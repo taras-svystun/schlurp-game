@@ -45,7 +45,7 @@ Words in **bold** are defined in `../CONTEXT.md`.
 
 **AI thinking.**
 - Every agent has `think()`, which returns **thoughts**, and `think_in_game(game)`.
-- Agents run in a background thread so the window stays responsive.
+- Agents run in a background thread so the window stays responsive. An agent never thinks in two threads at once, and a search checks `should_stop()` so Undo can cancel it (see `adr/0004`).
 - No plain Minimax agent: search starts at alpha-beta, to keep tournaments short and the laptop cool.
 - Greedy plays the move that gives the best pawn difference right after it, choosing at random between equal moves.
 - Heuristics to try for AlphaBeta, each "mine minus the opponent's": pawns, mobility, safe pawns (no empty neighbour), exposed cells (empty cells next to my pawns), holes left by jumps. Tournaments choose the weights.
@@ -56,8 +56,8 @@ Words in **bold** are defined in `../CONTEXT.md`.
 - [x] 2. Play for two people in Pygame, with the microscope look, and a README with run commands.
 - [x] 3. Agent interface, the Random agent, Play against AI, Undo.
 - [x] 4. Tournament and game records. Random vs Random should give about 50/50.
-- [ ] 5. Watch with the thoughts panel.
-- [ ] 6. Greedy agent and the Hint button, then a tournament.
+- [ ] 5. Greedy agent and the Hint button, then a tournament.
+- [ ] 6. Watch with the thoughts panel.
 - [ ] 7. AlphaBeta with the `pawns` heuristic, then a tournament.
 - [ ] 8. Better heuristics: mobility, safe pawns, exposed cells, holes; then tournaments to choose the weights.
 - [ ] 9. Deepening: move ordering, iterative deepening and a time limit.

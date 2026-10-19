@@ -1,6 +1,7 @@
 """What every AI agent looks like from the outside."""
 
 import random
+import threading
 from abc import ABC
 from dataclasses import dataclass, field
 
@@ -34,6 +35,9 @@ class Agent(ABC):
     """
 
     name = "Agent"
+    # Set by whoever runs the agent in a background thread (the window), while the agent thinks for it.
+    # See `should_stop` and docs/adr/0004.
+    stop: threading.Event | None = None
 
     def __init__(self, seed: int | None = None):
         # Every agent has its own random generator, for agents that use chance (Random, ties between moves, MCTS).
@@ -58,6 +62,15 @@ class Agent(ABC):
     def think(self, position: Position) -> Thoughts:
         """Choose a move, like `choose_move`, and also say how it was chosen."""
         return Thoughts(self.choose_move(position))
+
+    def should_stop(self) -> bool:
+        """True when the move being thought about is no longer wanted, for example after the person pressed Undo.
+
+        A search that may think for long checks this now and then and returns at once with any legal move:
+        nobody will play it. Agents that answer at once, like Random, never need to check.
+        Always False in a tournament, which never asks an agent to stop.
+        """
+        return self.stop is not None and self.stop.is_set()
 
     def think_in_game(self, game: Game) -> Thoughts:
         """Think about the position on the board in `game`. Tournament, Play and Watch call this one.

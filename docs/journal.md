@@ -76,3 +76,16 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - Random against Random, 500 games in 0.9 seconds: 51.8% ± 4.4%, so even, as it should be. A 40-game run showed the other side of the interval: it called Random stronger than itself, which a 95% interval does about 1 time in 20. `docs/agents/random.md` explains how to read it.
 - `schlurp/records.py` holds `GameRecord`: the players, who moved first, the moves in standard notation, and the result. Moves like `b6` do not say who made them, so replaying them from the start tells whose turn each one was, passes included. `replay()` also checks that the moves really give the saved result. We keep the newest 100 games and 10 tournaments.
 - Tests: a shared fixture in `tests/conftest.py` makes every test save its records in an empty temporary folder, never in the real `records/`.
+
+## One agent in one thread at a time (2026-10-20)
+
+**What:** In the window an agent never thinks in two threads at once, and Undo, New and Menu cancel a move that is no longer wanted. Greedy now comes before Watch in the plan.
+
+**Why:** Undo used to forget the thinking thread, and the next AI turn started a second thread with the same agent object. Harmless with Random, but search agents keep data on the agent while they think, and two threads would mix it up. The forgotten search also kept a CPU core busy.
+
+**How:**
+- `docs/adr/0004` explains the choice and why it cannot freeze the window or deadlock.
+- `AgentThread` takes a lock for its agent inside the background thread, so a new thread waits there, never in the window, until the old one is done.
+- `AgentThread.cancel()` sets an event that only that thread has. The agent reads it through `Agent.should_stop()`; a long search will check it and return at once. A thread cancelled before it got the lock never calls the agent.
+- New tests in `tests/test_agent_thread.py` use an agent that thinks until told to stop and counts how many threads are inside it. On the old code the main test fails with two threads inside the agent; now it is always one. The thread tests passed 20 runs out of 20.
+- We moved Greedy before Watch: Watch is mostly the thoughts panel, and Random has no thoughts to show.
