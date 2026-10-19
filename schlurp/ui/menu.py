@@ -4,7 +4,7 @@ import time
 
 import pygame
 
-from schlurp.agents import make_agent
+from schlurp.agents import AGENTS, make_agent
 from schlurp.engine import Player
 from schlurp.ui.board_view import BACKGROUND, LOOKS, TEXT, TEXT_SOFT, WIDTH, BoardView
 from schlurp.ui.play import PERSON, PlayScreen
@@ -13,8 +13,8 @@ from schlurp.ui.widgets import Button
 ROW_Y = {Player.BLUE: 250, Player.GREEN: 330, "first": 410}
 LABEL_RIGHT, OPTIONS_X = 330, 350
 OPTION_WIDTH, OPTION_GAP, OPTION_HEIGHT = 120, 8, 48
-# The AI agents the menu offers. More come with each agent step.
-MENU_AGENTS = ["Random"]
+# The AI agents the menu offers: every agent, with its default settings.
+MENU_AGENTS = list(AGENTS)
 
 
 def option_rect(row, i: int) -> pygame.Rect:
@@ -39,7 +39,7 @@ class MenuScreen:
 
     @property
     def can_start(self) -> bool:
-        """Play needs a person on at least one side. Two AI agents will be Watch (step 5)."""
+        """Play needs a person on at least one side. Two AI agents will be Watch (step 6)."""
         return PERSON in self.choices.values()
 
     def handle(self, event: pygame.event.Event):

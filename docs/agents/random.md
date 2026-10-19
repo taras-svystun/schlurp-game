@@ -47,7 +47,7 @@ B . . . . . G
 
 Blue has 26 legal moves: 9 clones and 17 jumps. One of them is far better than the others: the clone `d4` lands in the middle of Green's colony and infects all 5 of its neighbours. Blue goes from 2 pawns against 6 to 8 against 1. Every other move leaves Blue between 4 pawns behind and even.
 
-Any person would play `d4`. Random plays it 1 time in 26. This is exactly what the next agent, Greedy (step 6), fixes: it looks one move ahead and takes the move with the best pawn difference.
+Any person would play `d4`. Random plays it 1 time in 26. This is exactly what the next agent, Greedy (step 5, see [greedy.md](greedy.md)), fixes: it looks one move ahead and takes the move with the best pawn difference.
 
 There is a second, quieter weakness. A pawn has up to 8 cells to clone to, but up to 16 to jump to, and clones onto one cell from several pawns are one move. So most legal moves are jumps: 10 of the 16 at the start, 17 of the 26 above. Random picks moves, not kinds of moves, so **77% of its moves are jumps**. A jump adds no pawn and leaves a hole behind, and holes are where the opponent lands to infect you.
 

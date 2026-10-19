@@ -1,11 +1,13 @@
 """Agents: anything that chooses a move in a position. No Pygame here."""
 
 from schlurp.agents.base import Agent, Thoughts
+from schlurp.agents.greedy_agent import GreedyAgent
 from schlurp.agents.random_agent import RandomAgent
 
 # Every AI agent, by its name in the start menu, Watch and Tournament.
 AGENTS: dict[str, type[Agent]] = {
     "Random": RandomAgent,
+    "Greedy": GreedyAgent,
 }
 
 
@@ -24,4 +26,4 @@ def make_agent(name: str, seed: int | None = None) -> Agent:
     return agent
 
 
-__all__ = ["AGENTS", "Agent", "RandomAgent", "Thoughts", "make_agent"]
+__all__ = ["AGENTS", "Agent", "GreedyAgent", "RandomAgent", "Thoughts", "make_agent"]
