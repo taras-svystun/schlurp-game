@@ -36,7 +36,8 @@ Words in **bold** are defined in `../CONTEXT.md`.
 **Tournament** (terminal):
 - **random openings** of 4 moves, each played twice with the agents swapping players; 250 openings (500 games) by default;
 - reports win / draw / loss with a 95% confidence interval, the average pawn difference and the time per move;
-- writes a CSV and uses all CPU cores; `--workers` uses fewer.
+- writes a CSV and uses half the CPU cores, so the laptop stays cool; `--workers` changes that;
+- with no `--seed`, picks one and prints it, so any tournament can be played again.
 
 **Game records.**
 - JSON files in `records/games`; we keep the last 100 Play and Watch games.
@@ -54,7 +55,7 @@ Words in **bold** are defined in `../CONTEXT.md`.
 - [x] 1. Engine and tests against the `ataxx` package.
 - [x] 2. Play for two people in Pygame, with the microscope look, and a README with run commands.
 - [x] 3. Agent interface, the Random agent, Play against AI, Undo.
-- [ ] 4. Tournament and game records. Random vs Random should give about 50/50.
+- [x] 4. Tournament and game records. Random vs Random should give about 50/50.
 - [ ] 5. Watch with the thoughts panel.
 - [ ] 6. Greedy agent and the Hint button, then a tournament.
 - [ ] 7. AlphaBeta with the `pawns` heuristic, then a tournament.

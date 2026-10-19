@@ -60,3 +60,19 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `schlurp/ui/menu.py` is the start menu: Person or Random for Blue and Green, and who moves first. It does not start a game with no person, because AI against AI is Watch (step 5). `schlurp play` now opens the menu first.
 - The window tests use small fake agents (one always plays its first legal move, one waits until the test lets it answer, one crashes), so they do not depend on Random.
 - New idea in `docs/PLAN.md` under "Later": an online web version, hosted on the website of Pascal Peyremorte, Taras's friend who wrote the Delphi Schlurp, with Play against agents, Watch, tournaments and game records.
+
+## Step 4: Tournament and game records (2026-10-20)
+
+**What:** `schlurp tournament A B` plays many games between two AI agents with no window and prints a report. Every finished Play game is saved as a JSON game record, and a tournament as a CSV with `--save`.
+
+**Why:** From now on every agent must prove it is stronger with numbers, not by eye. Game records let us look at any game again, and Watch and the web version will read them too.
+
+**How:**
+- `schlurp/tournament.py` follows the Awalé tournament. 250 random openings of 4 moves, each played twice with the agents swapping players, so neither gets the luckier openings or the better player more often. All the random choices (openings, each agent's seed) are made before any game starts, so one seed gives the same games with 1 process or 8.
+- The games run in half the CPU cores by default, not all of them, so the laptop stays cool; `--workers` changes it. Each worker process builds its agents from their names, because macOS starts workers fresh and they cannot share objects with the main process.
+- With no `--seed`, the tournament picks one and prints it at the end of the report, so any tournament, even an odd-looking one, can be played again.
+- An agent that plays an illegal move stops the tournament with its name, the game number and the position, instead of a bare error from the engine.
+- The report gives A's points with a 95% confidence interval, the pawn difference, the time per move, wins by player, and how the games ended. For that `Result` got `ended_by` ("full board", "no pawns" or "fifty-move rule"), read from the score alone; the window uses it too, instead of its own guess.
+- Random against Random, 500 games in 0.9 seconds: 51.8% ± 4.4%, so even, as it should be. A 40-game run showed the other side of the interval: it called Random stronger than itself, which a 95% interval does about 1 time in 20. `docs/agents/random.md` explains how to read it.
+- `schlurp/records.py` holds `GameRecord`: the players, who moved first, the moves in standard notation, and the result. Moves like `b6` do not say who made them, so replaying them from the start tells whose turn each one was, passes included. `replay()` also checks that the moves really give the saved result. We keep the newest 100 games and 10 tournaments.
+- Tests: a shared fixture in `tests/conftest.py` makes every test save its records in an empty temporary folder, never in the real `records/`.

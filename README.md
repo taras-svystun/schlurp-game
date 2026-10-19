@@ -34,6 +34,51 @@ Two people can share the computer, or you can play against an AI. A game needs a
 
 Keys: U or Backspace undoes (one move between two people, or back to your last turn against an AI), N starts a new game with the same players, M goes back to the menu, Esc quits. The Undo, New and Menu buttons do the same.
 
+Every finished game is saved, see [Game records](#game-records).
+
+## Tournament
+
+Many games between two AI agents, with no window, to compare them with numbers:
+
+```sh
+.venv/bin/schlurp tournament Random Random
+```
+
+It plays 250 random openings of 4 moves, each twice with the agents swapping players (500 games), and prints a report: A's wins, draws and losses, A's points with a 95% confidence interval, the pawn difference at the end, the time per move, and how the games ended. Random against Random takes about a second.
+
+The games run in several processes at once: half the CPU cores by default, so the laptop stays cool. Options:
+
+```sh
+.venv/bin/schlurp tournament Random Random --openings 50          # fewer games: 50 openings, 100 games
+.venv/bin/schlurp tournament Random Random --opening-moves 6      # longer random openings
+.venv/bin/schlurp tournament Random Random --seed 1               # exactly the same games every time
+.venv/bin/schlurp tournament Random Random --workers 1            # one process only
+.venv/bin/schlurp tournament Random Random --save                 # also save every game in a CSV file
+.venv/bin/schlurp tournament --help                               # all options
+```
+
+The report ends with the seed it used, so any tournament can be played again with `--seed`.
+How to read the confidence interval: [docs/agents/random.md](docs/agents/random.md#what-tournaments-show).
+
+## Game records
+
+Saved games are in the `records` folder of the project (git ignores it):
+
+- `records/games`: one JSON file for each finished Play game, the newest 100. If you undo and finish the game again, that is saved too.
+- `records/tournaments`: one CSV file for each tournament run with `--save`, the newest 10. One row per game, with the whole game in the `record` column.
+
+A JSON file holds the players, who moved first, the moves (`b6 a1c3 ...`), the winner, the score and how the game ended. To look at a saved game in Python:
+
+```python
+from pathlib import Path
+from schlurp.records import load_game
+
+path = sorted(Path("records/games").iterdir())[-1]   # the newest game
+record = load_game(path)
+game = record.replay()                                # the whole game, move by move
+print(game.positions[10])                             # the board after 10 moves
+```
+
 ## AI agents
 
 Each agent is explained in its own file in [docs/agents](docs/agents):
@@ -46,7 +91,7 @@ Each agent is explained in its own file in [docs/agents](docs/agents):
 .venv/bin/pytest
 ```
 
-This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. It takes about 14 seconds.
+This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 18 seconds.
 
 Only the quick rule tests, without the reference:
 
@@ -64,6 +109,12 @@ Only the agents' tests:
 
 ```sh
 .venv/bin/pytest tests/test_agents.py tests/test_random_agent.py
+```
+
+Only the tournament and game record tests:
+
+```sh
+.venv/bin/pytest tests/test_tournament.py tests/test_records.py
 ```
 
 Only the tests against the reference:

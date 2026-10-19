@@ -72,6 +72,29 @@ A quick check with the engine, before the tournament exists (step 4): 2000 games
 - The winner was 7.3 pawns ahead at the end on average.
 - 20 microseconds per move, playing the move included.
 
+## What tournaments show
+
+`schlurp tournament Random Random --seed 1` (500 games, 0.9 seconds on 4 processes):
+
+```
+A wins 259 (51.8%), draws 0 (0.0%), loses 241 (48.2%).
+A's points: 51.8% ± 4.4%  (a win is 1 point, a draw 1/2; 95% confidence interval)
+Pawns at the end, A minus B: +0.6 ± 0.8 on average.
+Time per move: A 20 µs, B 19 µs.
+By player: Blue won 253, Green won 247, 0 draws.
+Games ended by: full board 460, no pawns 40, fifty-move rule 0. 184 moves per game on average.
+
+The interval includes 50%, so these games cannot tell the two agents apart.
+```
+
+As it should be: two copies of the same agent are even, and the interval includes 50%.
+
+A short tournament shows how to read the interval. `schlurp tournament Random Random --openings 20 --seed 937258` (40 games) says "A (Random) is stronger": 65.0% ± 15.0%, just above 50%. Random is not stronger than itself. A 95% interval means that about 1 tournament in 20 between equal agents still looks like a win for one of them. So:
+
+- Trust a short tournament only when the result is far from 50%.
+- When it is close, play more games: four times more games make the interval half as wide.
+- When we try many versions of one agent (heuristic weights in step 8), some will look better by luck alone. Play the best one again with a new seed before we believe it.
+
 ## What the tests check
 
 - It plays only legal moves, in 10 whole games.
