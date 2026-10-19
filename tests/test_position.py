@@ -222,6 +222,7 @@ def test_no_pawns_ends_the_game_at_once():
     assert after.legal_moves() == []
     assert after.result().winner is BLUE
     assert after.result().score == (2, 0)
+    assert after.result().ended_by == "no pawns"
 
 
 def test_full_board_more_pawns_wins():
@@ -233,6 +234,7 @@ def test_full_board_more_pawns_wins():
     assert after.ends_game()
     assert after.result().winner is GREEN
     assert after.result().score == (21, 28)
+    assert after.result().ended_by == "full board"
 
 
 def test_fifty_move_rule_is_a_draw():
@@ -244,6 +246,7 @@ def test_fifty_move_rule_is_a_draw():
     assert after.legal_moves() == []
     assert after.result().winner is None
     assert after.result().score == (2, 2)
+    assert after.result().ended_by == "fifty-move rule"
 
 
 def test_a_clone_resets_the_jump_count():
@@ -254,7 +257,9 @@ def test_a_clone_resets_the_jump_count():
 
 def test_a_wipe_out_on_the_last_jump_still_wins():
     position = Position.setup(LAST_GREEN_PAWN, jumps_in_a_row=JUMPS_FOR_DRAW - 1)
-    assert position.play(Move.parse("f1e3")).result().winner is BLUE
+    result = position.play(Move.parse("f1e3")).result()
+    assert result.winner is BLUE
+    assert result.ended_by == "no pawns"
 
 
 def test_positions_never_change():

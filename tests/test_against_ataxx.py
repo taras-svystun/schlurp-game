@@ -9,7 +9,7 @@ import random
 import ataxx
 import pytest
 
-from schlurp.engine import CELLS, EMPTY, NEIGHBOURS, SIZE, Move, Player, Position
+from schlurp.engine import CELLS, EMPTY, JUMPS_FOR_DRAW, NEIGHBOURS, SIZE, Move, Player, Position
 
 RESULTS = {"1-0": Player.BLUE, "0-1": Player.GREEN, "1/2-1/2": None}
 
@@ -76,12 +76,10 @@ def play_side_by_side(rng: random.Random, jump_chance: float = 0.0) -> dict[str,
         if ours.ends_game():
             result = ours.result()
             assert RESULTS[theirs.result()] is result.winner
-            if 0 in result.score:
-                seen["wipe_outs"] += 1
-            elif sum(result.score) == CELLS:
-                seen["full_boards"] += 1
-            else:
-                seen["fifty_moves"] += 1
+            kind = {"no pawns": "wipe_outs", "full board": "full_boards", "fifty-move rule": "fifty_moves"}
+            seen[kind[result.ended_by]] += 1
+            # `ended_by` reads only the score, so check it against the jump count too.
+            assert (result.ended_by == "fifty-move rule") == (ours.jumps_in_a_row >= JUMPS_FOR_DRAW and 0 not in result.score)
             return seen
         enemy = ours.to_move.opponent.value
         quiet_jumps = [

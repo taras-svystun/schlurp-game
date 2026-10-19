@@ -95,6 +95,19 @@ class Result:
     winner: Player | None  # None means a draw
     score: tuple[int, int]  # pawns at the end, (Blue, Green)
 
+    @property
+    def ended_by(self) -> str:
+        """Why the game ended: "no pawns", "full board" or "fifty-move rule".
+
+        The score alone tells it: the fifty-move rule ends a game after a jump, which always leaves
+        an empty cell, so the board is never full then, and both players still have pawns.
+        """
+        if 0 in self.score:
+            return "no pawns"
+        if sum(self.score) == CELLS:
+            return "full board"
+        return "fifty-move rule"
+
 
 @dataclass(frozen=True, slots=True)
 class Position:

@@ -204,8 +204,7 @@ class PlayScreen:
             return f"{to_move} is thinking..." if self.agent_to_move else f"{to_move} to move"
         blue, green = result.score
         if result.winner is None:
-            fifty_moves = blue and green and blue + green < 49
-            return f"Draw, {blue} to {green}" + (" (fifty-move rule)" if fifty_moves else "")
+            return f"Draw, {blue} to {green} ({result.ended_by})"
         return f"{self.player_name(result.winner)} wins, {max(blue, green)} to {min(blue, green)}"
 
     @property
