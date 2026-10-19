@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 import pygame
 
-from schlurp.ui.board_view import HIGHLIGHT, METAL, TEXT, TEXT_SOFT
+from schlurp.ui.board_view import BACKGROUND, HIGHLIGHT, METAL, TEXT, TEXT_SOFT
 
 
 @dataclass
@@ -20,9 +20,15 @@ class Button:
         surface: pygame.Surface,
         font: pygame.font.Font,
         hover: tuple[int, int] | None = None,
+        selected: bool = False,
         enabled: bool = True,
     ) -> None:
-        fill, border, colour = (METAL[2], METAL[1], TEXT) if enabled else (METAL[3], METAL[2], TEXT_SOFT)
+        if not enabled:
+            fill, border, colour = METAL[3], METAL[2], TEXT_SOFT
+        elif selected:
+            fill, border, colour = HIGHLIGHT, HIGHLIGHT, BACKGROUND
+        else:
+            fill, border, colour = METAL[2], METAL[1], TEXT
         if enabled and hover and self.contains(hover):
             border = HIGHLIGHT
         pygame.draw.rect(surface, fill, self.rect, border_radius=10)

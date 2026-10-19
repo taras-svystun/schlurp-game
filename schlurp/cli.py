@@ -6,7 +6,7 @@ import argparse
 def main() -> None:
     parser = argparse.ArgumentParser(prog="schlurp", description="Schlurp: play people or AI, and compare AI agents.")
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("play", help="Open a window where two people play on one computer.")
+    commands.add_parser("play", help="Open a window to play: two people on one computer, or a person against an AI.")
     args = parser.parse_args()
 
     if args.command == "play":

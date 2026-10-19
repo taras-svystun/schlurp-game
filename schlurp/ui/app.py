@@ -5,19 +5,18 @@ from collections.abc import Callable
 import pygame
 
 from schlurp.ui.board_view import HEIGHT, WIDTH
+from schlurp.ui.menu import MenuScreen
 
 
 def run(first_screen: Callable | None = None) -> None:
-    """Open the window. `first_screen` makes the screen to show first; by default it is a Play game.
+    """Open the window. `first_screen` makes the screen to show first; by default it is the start menu.
 
     It is a function, not a screen, because a screen needs Pygame to be started before it is made.
     """
-    from schlurp.ui.play import PlayScreen  # imported here so the screens can import this file's neighbours
-
     pygame.init()
     pygame.display.set_caption("Schlurp")
     surface = pygame.display.set_mode((WIDTH, HEIGHT))
-    screen = first_screen() if first_screen else PlayScreen()
+    screen = first_screen() if first_screen else MenuScreen()
     clock = pygame.time.Clock()
     hand_cursor = False
     while True:

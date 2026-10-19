@@ -45,3 +45,18 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `schlurp/cli.py` is the `schlurp` command. Only `play` exists for now. Pygame is loaded only when a window opens, and a test checks that `schlurp --help` does not load it.
 - The tests send fake clicks to the window with no real screen (SDL's "dummy" video driver), and draw every moment of a move, the middle of an animation included.
 - Undo, the start menu and Play against an AI come in step 3.
+
+## Step 3: agents, Random, Play against AI, Undo (2026-10-20)
+
+**What:** The `Agent` interface and the Random agent, a start menu, Play against an AI agent, and Undo. `docs/agents/random.md` explains Random.
+
+**Why:** Every AI we build later (Greedy, AlphaBeta, Deepening, MCTS) plugs into the same `Agent` interface, so the window, Watch and Tournament never need to know how an agent thinks. Random is the baseline every later agent must beat.
+
+**How:**
+- `schlurp/agents/base.py` has `Agent` and `Thoughts`, as in Awalé from the start: an agent writes `choose_move` (just the move) or `think` (the move with its scores, expected line, positions and depth), and each is built from the other. `think_in_game(game)` is what the window calls. Every agent has its own seeded random generator, so games can be repeated. `make_agent("Random")` builds an agent by its name. This folder never imports Pygame, and a test checks that.
+- `RandomAgent` is one line: `self.rng.choice(position.legal_moves())`. Since a pawn has up to 16 jumps but only 8 clones, and clones onto one cell are one move, 77% of Random's moves are jumps. In 2000 games of Random against itself, Blue won 1016 and Green 984, so moving first does not seem to matter much under random play.
+- The AI thinks in a background thread (`schlurp/ui/agent_thread.py`), on a copy of the game, so the window keeps drawing. Its move comes at least 0.7 seconds after it starts thinking, which is longer than the 0.45 s animation of your own move. If the agent crashes, the error is raised in the window instead of the game waiting forever.
+- Undo goes back to the last position where a person was to move: one move between two people, your move and the AI's against an AI. If the AI is still thinking, its answer is thrown away. Passes need nothing special, since a pass is not a move.
+- `schlurp/ui/menu.py` is the start menu: Person or Random for Blue and Green, and who moves first. It does not start a game with no person, because AI against AI is Watch (step 5). `schlurp play` now opens the menu first.
+- The window tests use small fake agents (one always plays its first legal move, one waits until the test lets it answer, one crashes), so they do not depend on Random.
+- New idea in `docs/PLAN.md` under "Later": an online web version, hosted on the website of Pascal Peyremorte, Taras's friend who wrote the Delphi Schlurp, with Play against agents, Watch, tournaments and game records.

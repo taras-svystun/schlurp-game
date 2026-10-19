@@ -53,7 +53,7 @@ Words in **bold** are defined in `../CONTEXT.md`.
 
 - [x] 1. Engine and tests against the `ataxx` package.
 - [x] 2. Play for two people in Pygame, with the microscope look, and a README with run commands.
-- [ ] 3. Agent interface, the Random agent, Play against AI, Undo.
+- [x] 3. Agent interface, the Random agent, Play against AI, Undo.
 - [ ] 4. Tournament and game records. Random vs Random should give about 50/50.
 - [ ] 5. Watch with the thoughts panel.
 - [ ] 6. Greedy agent and the Hint button, then a tournament.
