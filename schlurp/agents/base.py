@@ -24,6 +24,8 @@ class Thoughts:
     depth: int = 0  # how many moves ahead it looked
     # Moves whose score is only an upper bound: the move is worth this score or less (Deepening).
     upper_bounds: frozenset[Move] = frozenset()
+    # Random games played to the end (MCTS). Then each score is the share of those games the mover won, from 0 to 1.
+    playouts: int = 0
 
 
 class Agent(ABC):

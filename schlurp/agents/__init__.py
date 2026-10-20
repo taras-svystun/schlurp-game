@@ -7,6 +7,7 @@ from schlurp.agents.base import Agent, Thoughts
 from schlurp.agents.deepening_agent import DeepeningAgent
 from schlurp.agents.greedy_agent import GreedyAgent
 from schlurp.agents.heuristics import FEATURES, HEURISTICS, weighted
+from schlurp.agents.mcts_agent import MCTSAgent
 from schlurp.agents.random_agent import RandomAgent
 
 # Every AI agent, by its name in the start menu, Watch and Tournament.
@@ -15,17 +16,21 @@ AGENTS: dict[str, type[Agent]] = {
     "Greedy": GreedyAgent,
     "AlphaBeta": AlphaBetaAgent,
     "Deepening": DeepeningAgent,
+    "MCTS": MCTSAgent,
 }
 # What each agent can set after colons in its name, in any order: "AlphaBeta:2", "AlphaBeta:3:pawns", "Deepening:1s:mix".
-# A whole number is the depth; a name is a heuristic; a number with an "s" is a time limit per move, in seconds. A feature with a weight, like "mobility=0.1",
+# A whole number is the depth, or the number of playouts for MCTS; a name is a heuristic;
+# a number with an "s" is a time limit per move, in seconds. A feature with a weight, like "mobility=0.1",
 # builds a heuristic on the spot: `pawns` plus each feature times its weight ("AlphaBeta:2:mobility=0.1:holes=-1").
 # Random and Greedy have nothing to set.
 OPTIONS: dict[str, tuple[str, ...]] = {
     "AlphaBeta": ("depth", "heuristic"),
     "Deepening": ("depth", "heuristic", "time_limit"),
+    "MCTS": ("playouts", "time_limit"),
 }
 OPTION_TEXT = {
     "depth": "a depth (a whole number from 1 up)",
+    "playouts": "a number of playouts (a whole number from 1 up)",
     "time_limit": "a time limit (like 0.5s)",
     "heuristic": f"a heuristic ({', '.join(HEURISTICS)}) or features with weights ({', '.join(f'{n}=0.5' for n in FEATURES)})",
 }
@@ -51,7 +56,7 @@ def make_agent(name: str, seed: int | None = None) -> Agent:
             weights[feature] = weight
             continue
         if option.isdigit() and int(option) >= 1:
-            key, value = "depth", int(option)
+            key, value = ("playouts" if "playouts" in allowed else "depth"), int(option)
         elif option in HEURISTICS:
             key, value = "heuristic", HEURISTICS[option]
         elif seconds(option):
@@ -106,6 +111,7 @@ __all__ = [
     "AlphaBetaAgent",
     "DeepeningAgent",
     "GreedyAgent",
+    "MCTSAgent",
     "RandomAgent",
     "Thoughts",
     "make_agent",

@@ -216,6 +216,7 @@ def test_every_menu_button_fits_in_the_window():
     window = pygame.Rect(0, 0, WIDTH, HEIGHT)
     for button in [*menu.player_buttons.values(), *menu.first_buttons.values(), menu.start_button]:
         assert window.contains(button.rect), button.label
+        assert menu.view.font_small.size(button.label)[0] < button.rect.width - 8, button.label
     menu.draw(pygame.Surface((WIDTH, HEIGHT)))
 
 

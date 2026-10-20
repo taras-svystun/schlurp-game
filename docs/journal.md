@@ -159,3 +159,15 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - The profiler showed a search spending a fifth of its time checking moves it took from `legal_moves()` and another fifth reading `Player.value`. The engine got `play_legal` (no check, for searches only) and constants for the pawn numbers in `ends_game`: 28% faster, with the tests against `ataxx` still passing. Depth 4 now takes 0.65 s instead of 3.
 - Watch fits long agent names next to the pawn count, the status takes at most 2 lines, and the start menu is centred for 5 agents. Screenshots showed all three.
 - Tournaments: `Deepening:0.2s` beats `AlphaBeta:3` 70.5% ± 8.9% while thinking less, and at the same 0.2 s `mix` beats `pawns` 65.5% ± 6.5%, which answers step 8's question. Time-limited games cannot be repeated exactly; a depth can.
+
+## Step 10: MCTS (2026-10-20)
+
+**What:** The MCTS agent: Monte Carlo tree search with UCB selection and random playouts to the end of the game, 0.5 s per move unless told otherwise. Watch shows its shares of wins (0.00 to 1.00) and how many playouts it played. The start menu fits 6 agents. `docs/agents/mcts.md` explains it.
+
+**Why:** Every agent so far depends on a heuristic. MCTS needs none: it judges a position by playing random games from it. We wanted to see how that kind of agent does in Ataxx.
+
+**How:**
+- Following Awalé's MCTS: selection by UCB with c = √2, one new position per playout, backpropagation of 1, 1/2 or 0 points for the player who moved into each position, and the move tried most is played. Every legal move is tried at least once, even with almost no time, so every move gets a score.
+- `MCTS:1000` sets the playouts, `MCTS:0.2s` the time, both together stop at whichever comes first. `Thoughts` got `playouts`.
+- Tournaments (`--seed 31`, about 4 minutes in all): `MCTS:0.2s` beats Random 100%, but loses to Greedy and to `Deepening:0.2s` 99 games of 100, in 12 moves. With 1 s per move it still loses 95%.
+- We checked that this is the method, not a bug: random playouts barely see who is ahead. From a position with 1 pawn against 10, the side with 1 pawn still wins 41% of random games. With about 200 playouts per half second over 20 to 80 moves, that signal is lost in noise. Smarter or shorter playouts with a heuristic are the way to make it stronger.

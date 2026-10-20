@@ -49,11 +49,12 @@ Two AI agents play each other in a window, and you see what each one thinks befo
 .venv/bin/schlurp watch AlphaBeta:2 AlphaBeta            # depth 2 against depth 3
 .venv/bin/schlurp watch AlphaBeta:mix AlphaBeta          # the mix heuristic against plain pawns
 .venv/bin/schlurp watch Deepening:mix AlphaBeta          # "≤" marks a score that is only an upper bound
+.venv/bin/schlurp watch MCTS Greedy                      # scores are MCTS's share of wins in random games, 0.00 to 1.00
 ```
 
 The first agent plays Blue, the second Green. You can also pick an AI agent for both players in the start menu (`.venv/bin/schlurp play`).
 
-- **Move scores** (on the board): each cell a move can land on shows the best score of those moves, from the point of view of the player to move. The chosen move is yellow; for a jump a line shows which pawn jumps. Greedy's score is the pawn difference after the move; AlphaBeta's is the pawn difference it expects after looking ahead, or ±1000 and more for a won or lost game. Random gives no scores.
+- **Move scores** (on the board): each cell a move can land on shows the best score of those moves, from the point of view of the player to move. The chosen move is yellow; for a jump a line shows which pawn jumps. Greedy's score is the pawn difference after the move; MCTS's is its share of wins in random games, from 0.00 to 1.00; AlphaBeta's is the pawn difference it expects after looking ahead, or ±1000 and more for a won or lost game. Random gives no scores.
 - **Expected line**: the moves the agent expects next, starting with its own.
 - **Work done**: how many positions it looked at, how many moves ahead, and how long it took.
 
@@ -112,6 +113,7 @@ Each agent is explained in its own file in [docs/agents](docs/agents):
 - **Greedy** ([greedy.md](docs/agents/greedy.md)): looks one move ahead and plays the move with the best pawn difference. Wins 499 games of 500 against Random.
 - **AlphaBeta** ([alphabeta.md](docs/agents/alphabeta.md)): looks 3 moves ahead (my move, the answer, my next move), expects the opponent's best answer, and skips the lines that cannot change its choice. Set the depth after a colon: `AlphaBeta:2` is faster, `AlphaBeta:4` takes seconds per move. Name a heuristic too: `AlphaBeta:mix` is stronger at the same depth but takes about 0.7 s per move.
 - **Deepening** ([deepening.md](docs/agents/deepening.md)): AlphaBeta that tries the most promising moves first and looks 1, 2, 3, ... moves ahead until its time is up, then plays the best move of the deepest search it finished. 0.5 s per move unless told otherwise: `Deepening:0.2s` is quicker, `Deepening:2s` deeper, `Deepening:4` searches exactly 4 moves deep whatever the time, and `Deepening:1s:mix` sets the time and the heuristic. `Deepening:mix` is the strongest agent we have, and it gives the hints in Play.
+- **MCTS** ([mcts.md](docs/agents/mcts.md)): Monte Carlo tree search. It needs no heuristic: it judges moves by playing many random games to the end, and grows a tree of positions where the playouts look best. 0.5 s per move unless told otherwise: `MCTS:0.2s` sets the time, `MCTS:1000` the number of playouts, `MCTS:1000:2s` both (whichever comes first). Plain MCTS is weak in Ataxx: it beats Random but loses to Greedy, and mcts.md explains why.
 - **Heuristics** ([heuristics.md](docs/agents/heuristics.md)): what AlphaBeta guesses where its look-ahead stops. `pawns` (the default), `safe`, `holes`, `exposed`, `mobility`, and `mix` (safe pawns and holes, the best we found). You can try your own weights in the agent name: `AlphaBeta:2:safe=0.5:holes=-1` is `mix` at depth 2.
 
 Compare any two of them:
@@ -125,6 +127,7 @@ Compare any two of them:
 .venv/bin/schlurp tournament AlphaBeta:2:safe=1:holes=-0.5 AlphaBeta:2:mix --openings 50     # try your own weights
 .venv/bin/schlurp tournament Deepening:0.2s:mix Deepening:0.2s --openings 100     # about 7 minutes
 .venv/bin/schlurp tournament Deepening:4 AlphaBeta:3 --openings 20     # a depth, so the games can be repeated exactly
+.venv/bin/schlurp tournament MCTS:0.2s Greedy --openings 50     # under a minute: Greedy wins fast
 ```
 
 ## Run the tests
@@ -150,7 +153,7 @@ Only the window tests (no real window opens):
 Only the agents' tests:
 
 ```sh
-.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py tests/test_alphabeta_agent.py tests/test_heuristics.py tests/test_deepening_agent.py
+.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py tests/test_alphabeta_agent.py tests/test_heuristics.py tests/test_deepening_agent.py tests/test_mcts_agent.py
 ```
 
 Only the tournament and game record tests:

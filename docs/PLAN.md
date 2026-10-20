@@ -61,7 +61,7 @@ Words in **bold** are defined in `../CONTEXT.md`.
 - [x] 7. AlphaBeta with the `pawns` heuristic, then a tournament.
 - [x] 8. Better heuristics: mobility, safe pawns, exposed cells, holes; then tournaments to choose the weights.
 - [x] 9. Deepening: move ordering, iterative deepening and a time limit.
-- [ ] 10. MCTS.
+- [x] 10. MCTS.
 
 After each agent step, run a tournament against the agents we already have, to see if the new one is really stronger.
 

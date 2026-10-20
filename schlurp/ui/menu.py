@@ -12,9 +12,9 @@ from schlurp.ui.watch import WatchScreen
 from schlurp.ui.widgets import Button
 
 ROW_Y = {Player.BLUE: 250, Player.GREEN: 330, "first": 410}
-# The rows are centred in the window: with 5 agents, labels on the left and options from x = 260.
-LABEL_RIGHT, OPTIONS_X = 240, 260
-OPTION_WIDTH, OPTION_GAP, OPTION_HEIGHT = 120, 8, 48
+# The rows are centred in the window: with 6 agents, labels on the left and options from x = 220.
+LABEL_RIGHT, OPTIONS_X = 200, 220
+OPTION_WIDTH, OPTION_GAP, OPTION_HEIGHT = 104, 6, 48
 # The AI agents the menu offers: every agent, with its default settings.
 MENU_AGENTS = list(AGENTS)
 
