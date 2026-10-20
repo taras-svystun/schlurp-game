@@ -45,6 +45,7 @@ def main() -> None:
     web = commands.add_parser("web", help="Serve the web version on this computer, to play it in a browser (needs PHP).")
     web.add_argument("--port", type=int, default=8000, help="the port to serve on (default 8000)")
     web.add_argument("--lan", action="store_true", help="let other computers on the same network open it too")
+    commands.add_parser("package", help="Make one zip to install the web version on a server with Apache and PHP.")
     args = parser.parse_args()
 
     if args.command == "play":
@@ -63,6 +64,11 @@ def main() -> None:
         from schlurp.web_build import serve
 
         serve(args.port, args.lan)
+    elif args.command == "package":
+        from schlurp.web_build import package
+
+        print(f"Made {package()}")
+        print("Send it to whoever installs the site; LISEZ-MOI.txt inside says how, in French.")
 
 
 def run_tournament_command(args: argparse.Namespace) -> None:

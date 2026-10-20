@@ -253,3 +253,15 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - On screens narrower than 520 px the board zooms in, so a cell is about 44 px, enough for a finger.
 - Measured in headless Chrome on the M1: a move with its animation took 18 to 27 ms of the page's main thread, the same as without animation (22 to 25 ms); 3 s with nothing happening took 0.7 ms. An online page waiting for the other player drew the board again every second for nothing: 41 ms per 10 s. It now draws only when a move comes: 14 ms per 10 s.
 - The online check of W3 was run again in two browsers: moves, a reload, an illegal move and wrong links behave as before.
+
+## Step W5, our part: a package for Pascal's NAS (2026-10-20)
+
+**What:** `.venv/bin/schlurp package` makes `dist/schlurp-web-<date>.zip`: the folder `schlurp/` to upload to any Apache with PHP, and `LISEZ-MOI.txt`, the install steps in French. The folder has `check.php`, a page that shows in green or red what the game needs on that server. The step is ticked once Pascal has played on his NAS.
+
+**Why:** Pascal does all his hosting himself and wants to try the game on his home NAS before his public site. A page that checks the server answers our questions about it, so we do not need to ask him more.
+
+**How:**
+- `check.php` checks in PHP the version (7.4 or newer; 7.1 to 7.3 orange), JSON, `random_bytes`, the PDO driver, that `data/` is writable, and writes and deletes a line in the real database. Then in the browser: that `data/` cannot be downloaded, that `api.php` answers, that the engine zip is there, and that Pyodide's CDN can be reached. It shows the package's version (date and commit).
+- The SQLite file moved from `records/` to the site's own `data/` folder, since a server may not let PHP write outside the site. `data/.htaccess` hides it on Apache; `schlurp/web_router.php` does the same under `php -S`. The database code moved to `web/database.php`, shared by `api.php` and `check.php`.
+- The zip never takes `config.php` or the database, even when `web/` has them. The note has Windows line ends and a BOM, since Pascal uses Windows.
+- Checked: macOS's own Apache 2.4 refuses `data/` with `.htaccess` (403) and serves it when `AllowOverride None` (200), and `check.php` shows that case in red. The unpacked zip served by `php -S` passes every check in Chrome and plays the online game of W3. GitHub runs `check.php` on PHP 7.4.

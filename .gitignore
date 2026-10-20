@@ -6,3 +6,6 @@ records/
 node_modules/
 web/build/
 web/config.php
+web/data/*.sqlite
+web/data/probe.txt
+dist/

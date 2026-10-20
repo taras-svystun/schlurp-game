@@ -160,8 +160,9 @@ def test_the_zip_works_on_its_own(tmp_path):
 
 def test_the_page_and_the_tests_use_the_same_pyodide():
     in_tests = json.loads((PROJECT / "package.json").read_text())["devDependencies"]["pyodide"]
-    in_page = re.search(r"pyodide/v([\d.]+)/", (PROJECT / "web" / "worker.js").read_text()).group(1)
-    assert in_page == in_tests
+    for page in ["worker.js", "check.php"]:
+        in_page = re.search(r"pyodide/v([\d.]+)/", (PROJECT / "web" / page).read_text()).group(1)
+        assert in_page == in_tests, page
 
 
 def test_php_serves_the_page_and_the_zip(php_server):

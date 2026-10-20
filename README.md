@@ -182,7 +182,7 @@ It prints an address like `http://192.168.1.20:8000`. Open that address on your 
 `web/api.php` stores the moves of online games and passes them between the two browsers. `schlurp web` runs it for the page, but you can also run it alone and talk to it by hand:
 
 ```sh
-php -S localhost:8001 -t web
+php -S localhost:8001 -t web schlurp/web_router.php
 ```
 
 In another terminal:
@@ -198,7 +198,15 @@ curl -X POST 'http://localhost:8001/api.php?action=move' -d '{"game": "ID", "sec
 curl 'http://localhost:8001/api.php?action=game&game=ID'
 ```
 
-Every request is explained at the top of `web/api.php`. The games are kept in `records/web-games.sqlite`. On a real server, a `web/config.php` (copied from `web/config.example.php`, never put in git) points it to MariaDB instead.
+Every request is explained at the top of `web/api.php`. The games are kept in `web/data/games.sqlite`. Browsers cannot read that folder: on Apache `web/data/.htaccess` stops them, and under `php -S` the router `schlurp/web_router.php` does. On a real server, a `web/config.php` (copied from `web/config.example.php`, never put in git) can point it to MariaDB instead.
+
+### Install it on a server
+
+```sh
+.venv/bin/schlurp package
+```
+
+It makes `dist/schlurp-web-<date>.zip`: a folder `schlurp/` to upload to any Apache with PHP 7.4 or newer, and `LISEZ-MOI.txt`, how to install it, in French for Pascal. After uploading, `check.php` on the site shows in green or red whether the server has what the game needs. Run it again after every change, so the zip has the newest version; `check.php` shows which one a server runs.
 
 ## Run the tests
 
@@ -237,7 +245,7 @@ Only the tournament and game record tests:
 Only the web version's tests (one of them runs Pyodide in Node, see [First-time setup](#first-time-setup)):
 
 ```sh
-.venv/bin/pytest tests/test_web.py tests/test_game_server.py
+.venv/bin/pytest tests/test_web.py tests/test_game_server.py tests/test_package.py
 ```
 
 Only the tests against the reference:

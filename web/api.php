@@ -23,6 +23,8 @@ const MOVES_PER_GAME = 5000;
 // Games nobody moved in for this long are deleted when a new game is made.
 const KEEP_GAMES_FOR_SECONDS = 30 * 24 * 3600;
 
+require __DIR__ . '/database.php';
+
 class Problem extends Exception
 {
 }
@@ -33,43 +35,6 @@ function answer(int $status, array $body): void
     header('Content-Type: application/json');
     header('Cache-Control: no-store');
     echo json_encode($body);
-}
-
-function database(): PDO
-{
-    // config.php (never in git) sets $dsn, $user and $password for MariaDB on the host.
-    // Without it, an SQLite file: on Taras's laptop and in the tests.
-    $dsn = null;
-    $user = null;
-    $password = null;
-    if (file_exists(__DIR__ . '/config.php')) {
-        require __DIR__ . '/config.php';
-    }
-    if ($dsn === null) {
-        $file = getenv('SCHLURP_SQLITE') ?: __DIR__ . '/../records/web-games.sqlite';
-        if (!is_dir(dirname($file))) {
-            mkdir(dirname($file), 0777, true);
-        }
-        $dsn = 'sqlite:' . $file;
-    }
-    $db = new PDO($dsn, $user, $password, [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]);
-    // Plain SQL that both MariaDB and SQLite accept.
-    $db->exec('CREATE TABLE IF NOT EXISTS games (
-        id VARCHAR(16) PRIMARY KEY,
-        first_player VARCHAR(5) NOT NULL,  -- not `first`, a keyword in MariaDB
-        blue_secret VARCHAR(32) NOT NULL,
-        green_secret VARCHAR(32) NOT NULL,
-        updated BIGINT NOT NULL
-    )');
-    // The primary key stops two moves with the same number, even when two requests come at once.
-    $db->exec('CREATE TABLE IF NOT EXISTS moves (
-        game VARCHAR(16) NOT NULL,
-        number INTEGER NOT NULL,
-        player VARCHAR(5) NOT NULL,
-        move VARCHAR(4) NOT NULL,
-        PRIMARY KEY (game, number)
-    )');
-    return $db;
 }
 
 function body(): array

@@ -8,6 +8,7 @@ Web Worker unpacks it into Pyodide. Pygame, the window, tournaments and records 
 together, like Apache does on the real site.
 """
 
+import datetime
 import shutil
 import socket
 import subprocess
@@ -19,7 +20,16 @@ PROJECT = Path(__file__).resolve().parents[1]
 WEB_DIR = PROJECT / "web"
 ZIP_PATH = WEB_DIR / "build" / "schlurp.zip"
 LOG_PATH = PROJECT / "records" / "web-server.log"
+ROUTER = Path(__file__).resolve().parent / "web_router.php"  # keeps data/ and config.php away from browsers
+DIST_DIR = PROJECT / "dist"
 PORT = 8000
+
+# What `package` puts on a server, as paths inside web/. Never config.php or the database: they are the server's own.
+SITE_FILES = (
+    "index.html", "page.js", "board.js", "worker.js", "style.css",
+    "api.php", "database.php", "check.php", "config.example.php", "data/.htaccess", "data/index.html",
+)
+INSTALL_NOTE = PROJECT / "docs" / "install" / "LISEZ-MOI.txt"
 
 # Everything the web version needs, as paths inside schlurp/. The agents come along for play against AI later.
 PYTHON_FILES = ("__init__.py", "engine.py", "clicks.py", "web_game.py", "agents/*.py")
@@ -33,6 +43,34 @@ def build(zip_path: Path = ZIP_PATH) -> Path:
         for pattern in PYTHON_FILES:
             for path in sorted(package.glob(pattern)):
                 archive.write(path, Path("schlurp") / path.relative_to(package))
+    return zip_path
+
+
+def version() -> str:
+    """Today's date and the git commit, like "2026-10-20 (16959d9)", so we know which version a server runs."""
+    try:
+        commit = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=PROJECT, capture_output=True, text=True, check=True).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        commit = "unknown"
+    return f"{datetime.date.today()} ({commit})"
+
+
+def package(dist_dir: Path = DIST_DIR) -> Path:
+    """One zip to install the web version on a server: the folder `schlurp/` to upload, and a note in French.
+
+    Pascal installs it himself, from Windows, so the note is plain text with Windows line ends and a BOM,
+    which every Windows editor reads as UTF-8.
+    """
+    built = version()
+    dist_dir.mkdir(parents=True, exist_ok=True)
+    zip_path = dist_dir / f"schlurp-web-{built.split()[0]}.zip"
+    note = INSTALL_NOTE.read_text(encoding="utf-8").replace("{version}", built)
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("LISEZ-MOI.txt", "\ufeff" + note.replace("\n", "\r\n"))
+        for name in SITE_FILES:
+            archive.write(WEB_DIR / name, f"schlurp/{name}")
+        archive.write(build(), "schlurp/build/schlurp.zip")
+        archive.writestr("schlurp/version.txt", built + "\n")
     return zip_path
 
 
@@ -68,6 +106,6 @@ def serve(port: int = PORT, lan: bool = False) -> None:
     # PHP writes a line for every request, and the page asks every second, so the log goes to a file.
     with open(LOG_PATH, "a") as log:
         try:
-            subprocess.run([php, "-S", f"{host}:{port}", "-t", str(WEB_DIR)], stdout=log, stderr=log)
+            subprocess.run([php, "-S", f"{host}:{port}", "-t", str(WEB_DIR), str(ROUTER)], stdout=log, stderr=log)
         except KeyboardInterrupt:
             print()

@@ -1,0 +1,50 @@
+SCHLURP : installation sur le NAS (ou tout serveur Apache + PHP)
+================================================================
+
+Version : {version}
+
+Ce qu'il faut
+-------------
+- Apache avec PHP 7.4 ou plus récent.
+- PDO avec SQLite (le plus simple, rien à créer) ou avec MySQL/MariaDB.
+- Pas de Python sur le serveur : le moteur du jeu tourne dans le navigateur.
+  Le navigateur a besoin d'Internet : il charge Pyodide (Python pour navigateur)
+  depuis cdn.jsdelivr.net, environ 6 Mo la première fois, puis il le garde.
+
+Installation
+------------
+1. Copie le dossier « schlurp » de cette archive sur un site du NAS, par FTP.
+   Il peut être la racine du site ou un sous-dossier.
+   Le fichier build/schlurp.zip doit passer en binaire (FileZilla le fait tout seul).
+
+2. Donne à PHP le droit d'écrire dans le dossier schlurp/data/ :
+   la base SQLite y sera créée. Le fichier data/.htaccess le cache aux navigateurs.
+
+3. Ouvre la page de vérification :
+      http://<adresse-du-NAS>:<port>/check.php
+   (avec le sous-dossier s'il y en a un, par exemple .../schlurp/check.php).
+   Tout doit être vert.
+   - Si « Le dossier data/ est caché aux navigateurs » est rouge : Apache ignore
+     data/.htaccess. Il faut autoriser AllowOverride (AuthConfig ou All) pour ce
+     dossier, ou passer à MariaDB (étape 4).
+
+4. Facultatif, MariaDB au lieu de SQLite : crée une base vide et un utilisateur,
+   copie config.example.php en config.php et remplis-le. Les tables se créent
+   toutes seules. Recharge check.php : la ligne PDO doit dire MariaDB.
+
+5. Ouvre le jeu : http://<adresse-du-NAS>:<port>/
+   Choisis ta couleur (« You play »), clique « Start an online game »,
+   et ouvre le lien affiché sur un autre ordinateur du réseau.
+   Le joueur qui a lancé la partie la retrouve à la même adresse,
+   même après avoir fermé le navigateur.
+
+Mise à jour
+-----------
+Recopie le dossier « schlurp » par-dessus l'ancien, sans toucher à data/ ni à config.php.
+
+Bon à savoir
+------------
+- Les parties sans aucun coup depuis 30 jours sont effacées.
+- Le serveur ne connaît pas les règles : il transmet les coups, et chaque
+  navigateur les vérifie avec le moteur du jeu.
+- En cas de souci, envoie à Taras une capture d'écran de check.php.

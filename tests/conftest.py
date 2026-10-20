@@ -1,5 +1,6 @@
 """Shared test setup."""
 
+import contextlib
 import os
 import shutil
 import socket
@@ -20,9 +21,15 @@ def records_in_a_temporary_folder(tmp_path, monkeypatch):
     return folder
 
 
-@pytest.fixture(scope="session")
-def php_server(tmp_path_factory):
-    """The address of PHP's own web server serving web/, like `schlurp web` does, with games in a temporary SQLite file."""
+PROJECT = Path(__file__).resolve().parents[1]
+
+
+@contextlib.contextmanager
+def php_serving(folder: Path, sqlite: Path):
+    """PHP's own web server serving `folder` like `schlurp web` does, with games in the SQLite file `sqlite`.
+
+    Yields its address, like http://127.0.0.1:50123.
+    """
     if not shutil.which("php"):
         if os.environ.get("CI"):
             pytest.fail("PHP must be installed on CI")
@@ -30,12 +37,11 @@ def php_server(tmp_path_factory):
     with socket.socket() as free:
         free.bind(("127.0.0.1", 0))
         port = free.getsockname()[1]
-    env = {**os.environ, "SCHLURP_SQLITE": str(tmp_path_factory.mktemp("server") / "games.sqlite")}
     # Several workers, so requests sent at the same moment really run at the same moment.
-    env["PHP_CLI_SERVER_WORKERS"] = "4"
-    web = Path(__file__).resolve().parents[1] / "web"
+    env = {**os.environ, "SCHLURP_SQLITE": str(sqlite), "PHP_CLI_SERVER_WORKERS": "4"}
     php = subprocess.Popen(
-        ["php", "-S", f"127.0.0.1:{port}", "-t", str(web)], env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        ["php", "-S", f"127.0.0.1:{port}", "-t", str(folder), str(PROJECT / "schlurp" / "web_router.php")],
+        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
     for _ in range(100):
         try:
@@ -43,6 +49,15 @@ def php_server(tmp_path_factory):
             break
         except OSError:
             time.sleep(0.05)
-    yield f"http://127.0.0.1:{port}"
-    php.terminate()
-    php.wait()
+    try:
+        yield f"http://127.0.0.1:{port}"
+    finally:
+        php.terminate()
+        php.wait()
+
+
+@pytest.fixture(scope="session")
+def php_server(tmp_path_factory):
+    """The address of PHP's web server serving web/, with games in a temporary SQLite file."""
+    with php_serving(PROJECT / "web", tmp_path_factory.mktemp("server") / "games.sqlite") as address:
+        yield address
