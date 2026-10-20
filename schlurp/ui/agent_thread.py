@@ -55,8 +55,7 @@ class AgentThread:
             try:
                 self.thoughts = self._agent.think_in_game(self._game)
             except Exception as error:
-                # Keep it for the main thread to raise, so a broken agent stops the program
-                # instead of leaving the window waiting for a move forever.
+                # Keep it for the window to show, instead of leaving it waiting for a move forever.
                 self.error = error
             finally:
                 self._agent.stop = None

@@ -261,3 +261,23 @@ def test_a_long_agent_name_fits_next_to_the_pawn_count():
     assert fit("Blue (Greedy)", [font, small], 150).get_width() == font.size("Blue (Greedy)")[0]  # fits as it is
     assert fit(screen.player_name(BLUE), [font, small], 150).get_width() <= 150
     screen.draw(pygame.Surface((WIDTH, HEIGHT)))
+
+
+class BrokenAgent(Agent):
+    name = "Broken"
+
+    def choose_move(self, position):
+        raise RuntimeError("this agent is broken")
+
+
+def test_a_broken_agent_shows_its_error_and_new_starts_again(capsys):
+    screen = watch(green=BrokenAgent())
+    next_move(screen)  # Blue plays
+    think(screen)
+    screen.update()
+    assert screen.status() == "Green (Broken) crashed."
+    assert "RuntimeError: this agent is broken" in screen.message
+    capsys.readouterr()
+    screen.draw(pygame.Surface((WIDTH, HEIGHT)))
+    press(screen, pygame.K_n)
+    assert screen.crashed is None and screen.game.moves == []

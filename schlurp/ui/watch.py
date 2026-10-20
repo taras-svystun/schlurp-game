@@ -114,7 +114,7 @@ class WatchScreen(GameScreen):
         self.step_asked = False
 
     def status(self) -> str:
-        if self.game.is_over:
+        if self.game.is_over or self.crashed:
             return super().status()
         player = self.player_name(self.game.position.to_move)
         if self.thinking and self.thinking.is_done:

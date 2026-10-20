@@ -1,6 +1,7 @@
 """What Play and Watch share: one game, the agents in it, an AI agent thinking in the background, and the side panel."""
 
 import time
+import traceback
 
 import pygame
 
@@ -40,6 +41,18 @@ def describe(before: Position, move: Move, after: Position, names: dict[Player, 
     return text
 
 
+def error_words(error: Exception) -> str:
+    """A short line about an agent's error for the window. The full traceback goes to the terminal.
+
+    Short enough for 3 lines of the panel, so it never runs into the buttons under the message.
+    """
+    traceback.print_exception(error)
+    text = f"{type(error).__name__}: {error}"
+    if len(text) > 50:
+        text = text[:47] + "..."
+    return f"{text} See the terminal."
+
+
 def wrap(text: str, font: pygame.font.Font, width: int) -> list[str]:
     """Split text into lines no wider than `width` pixels."""
     lines, line = [], ""
@@ -76,11 +89,14 @@ class GameScreen:
         self.view = BoardView()
         self.hover: tuple[int, int] | None = None
         self.thinking: AgentThread | None = None  # the AI agent choosing a move right now
+        # The name of the player whose agent raised an error, or None. Then nobody moves until New, Menu or Undo.
+        self.crashed: str | None = None
         self.new_game()
 
     def new_game(self) -> None:
         self.stop_thinking()
         self.game = Game(first=self.first)
+        self.crashed = None
         self.message = ""
         self.animation: MoveAnimation | None = None
 
@@ -94,7 +110,7 @@ class GameScreen:
 
     def update(self) -> None:
         """Called every frame. Starts an AI thinking when it is its turn, and plays its move when it is ready."""
-        if self.game.is_over or self.agent_to_move is None:
+        if self.game.is_over or self.agent_to_move is None or self.crashed:
             return
         if self.thinking is None:
             self.thinking = AgentThread(self.agent_to_move, self.game)
@@ -102,7 +118,11 @@ class GameScreen:
         if not self.thinking.is_done:
             return
         if self.thinking.error:
-            raise self.thinking.error
+            # Show the error and wait, instead of closing the window: the game so far stays on the board.
+            self.crashed = self.player_name(self.game.position.to_move)
+            self.message = error_words(self.thinking.error)
+            self.thinking = None
+            return
         if self.ready_to_play(self.thinking):
             thinking, self.thinking = self.thinking, None
             self.play(thinking.thoughts.move)
@@ -151,6 +171,8 @@ class GameScreen:
         return f"{player.name.title()} ({agent.name})" if agent else player.name.title()
 
     def status(self) -> str:
+        if self.crashed:
+            return f"{self.crashed} crashed."
         result = self.game.result
         if result is None:
             to_move = self.player_name(self.game.position.to_move)

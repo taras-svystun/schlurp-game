@@ -14,6 +14,7 @@ from schlurp.engine import Player, cell_index
 from schlurp.records import load_game
 from schlurp.ui.board_view import HEIGHT, WIDTH, cell_center
 from schlurp.ui.menu import PERSON, MenuScreen
+from schlurp.ui.game_screen import PANEL_WIDTH, error_words, wrap
 from schlurp.ui.play import PlayScreen
 from schlurp.ui.watch import WatchScreen
 
@@ -42,6 +43,8 @@ class WaitingAgent(FirstMoveAgent):
 
 
 class BrokenAgent(Agent):
+    name = "Broken"
+
     def choose_move(self, position):
         raise RuntimeError("this agent is broken")
 
@@ -159,13 +162,39 @@ def test_undo_button():
     assert played(screen) == []
 
 
-def test_a_broken_agent_stops_the_program_instead_of_hanging():
+def test_a_broken_agent_shows_its_error_and_the_window_stays_open(capsys):
     screen = against(BrokenAgent())
     click_cell(screen, "b6")
     screen.update()
     screen.thinking.wait()
-    with pytest.raises(RuntimeError, match="broken"):
-        screen.update()
+    screen.update()  # does not raise
+    assert screen.status() == "Green (Broken) crashed."
+    assert screen.message == "RuntimeError: this agent is broken See the terminal."
+    assert "Traceback" in capsys.readouterr().err
+    screen.update()
+    assert screen.thinking is None  # it does not try again by itself
+    screen.draw(pygame.Surface((WIDTH, HEIGHT)))
+
+
+def test_undo_gives_a_broken_agent_another_try():
+    screen = against(BrokenAgent())
+    click_cell(screen, "b6")
+    screen.update()
+    screen.thinking.wait()
+    screen.update()
+    press(screen, pygame.K_u)
+    assert screen.crashed is None
+    assert screen.status() == "Blue to move"
+
+
+def test_new_game_after_a_broken_agent_starts_clean():
+    screen = against(BrokenAgent())
+    click_cell(screen, "b6")
+    screen.update()
+    screen.thinking.wait()
+    screen.update()
+    screen.new_game()
+    assert screen.crashed is None and screen.message == ""
 
 
 def test_random_plays_a_whole_game_against_itself_through_the_window():
@@ -226,3 +255,9 @@ def test_m_goes_back_to_the_menu_with_the_same_players():
     assert isinstance(menu, MenuScreen)
     assert menu.choices == {BLUE: "Random", GREEN: PERSON}
     assert menu.first is GREEN
+
+
+def test_a_long_error_fits_above_the_moves_list(capsys):
+    screen = PlayScreen()
+    words = error_words(ValueError("a very long message " * 20))
+    assert len(wrap(words, screen.view.font_small, PANEL_WIDTH)) <= 3

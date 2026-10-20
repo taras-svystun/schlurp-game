@@ -166,3 +166,18 @@ def test_the_buttons_and_keys_fit_in_the_panel():
         assert not any(button.rect.colliderect(other.rect) for other in buttons[i + 1 :])
     assert KEYS_TOP + 18 * len(KEYS) <= screen.undo_button.rect.top  # the keys never run into the buttons
     assert all(screen.view.font_small.size(line)[0] <= PANEL_WIDTH for line in KEYS)
+
+
+class BrokenHintAgent(Agent):
+    def choose_move(self, position):
+        raise RuntimeError("no hint today")
+
+
+def test_a_broken_hint_agent_shows_its_error_and_the_game_goes_on(capsys):
+    screen = colony_screen()
+    screen.hint_agent = BrokenHintAgent()
+    get_hint(screen)
+    assert screen.hint is None
+    assert screen.message == "Hint crashed. RuntimeError: no hint today See the terminal."
+    assert "Traceback" in capsys.readouterr().err
+    assert screen.persons_turn

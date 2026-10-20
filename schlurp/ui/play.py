@@ -6,7 +6,7 @@ from schlurp.agents import Agent, make_agent
 from schlurp.engine import EMPTY, JUMP_TARGETS, NEIGHBOURS, Move, Player, Position
 from schlurp.ui.agent_thread import AgentThread
 from schlurp.ui.board_view import BACKGROUND, HEIGHT, LOOKS, TEXT, TEXT_SOFT, cell_at
-from schlurp.ui.game_screen import PANEL_WIDTH, PANEL_X, PERSON, GameScreen, describe, move_words, wrap
+from schlurp.ui.game_screen import PANEL_WIDTH, PANEL_X, PERSON, GameScreen, describe, error_words, move_words, wrap
 from schlurp.ui.widgets import Button
 
 HELP = "Click a pawn, then a cell. Or click an empty cell next to your pawns to clone there."
@@ -130,7 +130,8 @@ class PlayScreen(GameScreen):
         if self.hint_thinking and self.hint_thinking.is_done:
             thinking, self.hint_thinking = self.hint_thinking, None
             if thinking.error:
-                raise thinking.error
+                self.message = f"Hint crashed. {error_words(thinking.error)}"
+                return super().update()
             self.hint = thinking.thoughts.move
             self.message = f"Hint from {HINT_AGENT}: {move_words(self.hint)}."
         super().update()
@@ -144,6 +145,7 @@ class PlayScreen(GameScreen):
         while len(self.game.moves) > target:
             self.game.undo()
         self.stop_thinking()  # if an AI was thinking, its move is no longer wanted
+        self.crashed = None  # a crashed agent gets another try
         self.drop_hint()
         self.selected = None
         self.animation = None
