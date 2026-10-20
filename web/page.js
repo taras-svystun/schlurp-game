@@ -6,8 +6,8 @@
 // - online: the address is ?game=<id>&seat=<secret>. Moves go through the game server (api.php), which
 //   only passes them on; the worker checks every move that comes from the other player.
 
-const SVG = "http://www.w3.org/2000/svg";
-const COLUMNS = "abcdefg";
+import { ANIMATION_SECONDS, drawBoard, moveAnimation } from "./board.js";
+
 const NAMES = { blue: "Blue", green: "Green" };
 const POLL_SECONDS = 1; // how often an online game asks the server for the other player's move
 
@@ -18,6 +18,7 @@ let state = null; // the last state from the worker
 let selected = null; // the name of the picked pawn, like "a7", or null
 let busy = true; // waiting for the worker or the server; clicks wait too
 let problem = ""; // the last error, shown until the next good answer
+let animation = null; // the last move, while it is being animated
 
 // The online game, or null when two people share this computer.
 const address = new URLSearchParams(location.search);
@@ -60,6 +61,8 @@ function show(answer) {
     document.getElementById("loaded").textContent = `Loaded in ${seconds} s.`;
     console.log(`Schlurp loaded in ${seconds} s`);
   }
+  animation = moveAnimation(state, answer);
+  if (animation) setTimeout(draw, ANIMATION_SECONDS * 1000 + 20); // then draw the board standing still
   state = answer;
   problem = "";
   selected = null;
@@ -104,10 +107,16 @@ async function createOnlineGame() {
   }
 }
 
+// A step that returns false changed nothing, so the board is not drawn again.
 function onlineStep(step) {
-  online.queue = online.queue.then(step).catch((error) => {
-    problem = `Cannot reach the server (${error.message}). Trying again…`;
-  }).then(draw);
+  online.queue = online.queue
+    .then(step)
+    .catch((error) => {
+      problem = `Cannot reach the server (${error.message}). Trying again…`;
+    })
+    .then((changed) => {
+      if (changed !== false) draw();
+    });
   return online.queue;
 }
 
@@ -139,6 +148,8 @@ function poll() {
   onlineStep(async () => {
     const game = await server("game", { query: { game: online.game, after: online.known } });
     if (game.error) throw new Error(game.error);
+    const fresh = game.moves.filter(({ number }) => number >= online.known);
+    if (!fresh.length && !problem.startsWith("Cannot reach")) return false; // nothing new: most seconds
     for (const { number, player, move } of game.moves) {
       if (number !== online.known) continue; // already played, like our own move coming back
       if (!show(await ask({ type: "play", move, player }))) {
@@ -172,15 +183,6 @@ function playOnline(move) {
 }
 
 // --- Clicks ----------------------------------------------------------------------------------------------
-
-// The engine's cells go a1, b1, ..., g1, a2, ..., g7. On screen row 7 is at the top.
-function cellName(index) {
-  return COLUMNS[index % 7] + (Math.floor(index / 7) + 1);
-}
-
-function cellXY(name) {
-  return [COLUMNS.indexOf(name[0]), 7 - Number(name[1])];
-}
 
 function mover() {
   return state.to_move === "blue" ? "B" : "G";
@@ -223,51 +225,6 @@ function click(name, letter) {
 
 // --- Drawing ---------------------------------------------------------------------------------------------
 
-function svg(tag, attributes, parent) {
-  const element = document.createElementNS(SVG, tag);
-  for (const [key, value] of Object.entries(attributes)) element.setAttribute(key, value);
-  parent.appendChild(element);
-  return element;
-}
-
-function ring(name, kind, board) {
-  const [x, y] = cellXY(name);
-  svg("circle", { cx: x + 0.5, cy: y + 0.5, r: 0.42, class: `ring ${kind}` }, board);
-}
-
-function drawBoard() {
-  const board = document.getElementById("board");
-  board.replaceChildren();
-  const targets = selected ? state.reachable[selected] : {};
-  const active = canMove();
-  for (let index = 0; index < 49; index++) {
-    const name = cellName(index);
-    const letter = state.cells[index];
-    const [x, y] = cellXY(name);
-    const clickable = active && ((letter === mover() && name in state.reachable) || (letter === "." && (targets[name] || cloneOnto(name))));
-    const cell = svg("rect", { x, y, width: 1, height: 1, class: clickable ? "cell clickable" : "cell" }, board);
-    cell.addEventListener("click", () => click(name, letter));
-    if (letter !== ".") {
-      const dimmed = active && letter === mover() && !(name in state.reachable);
-      const pawn = svg("circle", { cx: x + 0.5, cy: y + 0.5, r: 0.34, class: `pawn ${letter === "B" ? "blue" : "green"}${dimmed ? " dimmed" : ""}` }, board);
-      if (clickable) pawn.classList.add("clickable");
-      pawn.addEventListener("click", () => click(name, letter));
-    }
-  }
-  const last = state.moves.at(-1);
-  if (last) {
-    ring(last.slice(-2), "last", board);
-    if (last.length === 4) {
-      const [x, y] = cellXY(last.slice(0, 2));
-      svg("circle", { cx: x + 0.5, cy: y + 0.5, r: 0.08, class: "left" }, board);
-    }
-  }
-  if (selected) {
-    ring(selected, "selected", board);
-    for (const [name, move] of Object.entries(targets)) ring(name, move.length === 4 ? "jump" : "clone", board);
-  }
-}
-
 function statusText() {
   if (online?.stopped) return online.stopped;
   if (problem) return problem;
@@ -290,7 +247,16 @@ function statusText() {
 function draw() {
   document.getElementById("status").textContent = statusText();
   if (!state) return;
-  drawBoard();
+  drawBoard(document.getElementById("board"), {
+    cells: state.cells,
+    moves: state.moves,
+    reachable: state.reachable,
+    mover: mover(),
+    selected,
+    active: canMove(),
+    animation,
+    onClick: click,
+  });
   document.getElementById("pawns").textContent = `Blue ${state.pawns.blue} · Green ${state.pawns.green}`;
   const moves = document.getElementById("moves");
   moves.replaceChildren(...state.moves.map((move) => Object.assign(document.createElement("li"), { textContent: move })));
@@ -300,6 +266,8 @@ function draw() {
     document.getElementById("create").disabled = busy;
   }
 }
+
+window.addEventListener("resize", draw); // the board zooms in on narrow screens (see board.js)
 
 // --- Start -----------------------------------------------------------------------------------------------
 

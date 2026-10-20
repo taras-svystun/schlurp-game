@@ -240,3 +240,16 @@ A short, plain-English history of each finished step: what we did, why, and how.
 **What:** The Pyodide test first checks that `node` runs, and on a failure shows Node's own error.
 
 **Why:** On Taras's laptop the test failed with no clear reason. The failed `brew install php` of step W2 had upgraded icu4c from 73 to 78, which broke Homebrew's old Node 21. Where `/opt/homebrew/bin` came first in the PATH, the test ran that Node instead of nvm's Node 22.
+
+## Step W4: the microscope look (2026-10-20)
+
+**What:** The web page looks like the Pygame window: a round lens with a metal ring, the grid with its labels, and microbes with a membrane and a nucleus. A move animates: a clone grows, a jump flies from its cell, and the infected neighbours fade to the new colour while they swell a little.
+
+**Why:** It looks better, and Taras agreed to it once we knew the cost: nothing on the server, and almost nothing in the browser.
+
+**How:**
+- `web/board.js` draws the board in SVG; `page.js` keeps the game logic. Colours and shapes come from `schlurp/ui/board_view.py`. Each microbe's bumps depend on its cell and never move, unlike the window's wobble, so the page does no work between moves.
+- The animations are CSS animations, 0.45 s in all. A redraw in the middle of one starts it part of the way through, so the second-by-second online checks never restart it. Browsers that ask for less motion get no animation.
+- On screens narrower than 520 px the board zooms in, so a cell is about 44 px, enough for a finger.
+- Measured in headless Chrome on the M1: a move with its animation took 18 to 27 ms of the page's main thread, the same as without animation (22 to 25 ms); 3 s with nothing happening took 0.7 ms. An online page waiting for the other player drew the board again every second for nothing: 41 ms per 10 s. It now draws only when a move comes: 14 ms per 10 s.
+- The online check of W3 was run again in two browsers: moves, a reload, an illegal move and wrong links behave as before.

@@ -1,25 +1,20 @@
-/* A plain look for now; the microscope look comes in step W4. */
+/* The microscope look, with the colours of the Pygame window (schlurp/ui/board_view.py). Always dark: a lab at night. */
 :root {
-  --background: #f4f4f0;
-  --text: #222;
-  --text-soft: #666;
-  --cell: #e2e2da;
-  --cell-line: #bbb;
-  --blue: #2c6fd6;
-  --green: #2f9e44;
-  --target: #222;
-  --last: #e8590c;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16181c;
-    --text: #e8e8e8;
-    --text-soft: #999;
-    --cell: #2a2d33;
-    --cell-line: #444;
-    --target: #e8e8e8;
-  }
+  color-scheme: dark;
+  --background: #0c0f14;
+  --text: #e2e8e4;
+  --text-soft: #8c9c96;
+  --lens-middle: #34423c;
+  --lens-edge: #101616;
+  --grid: #4e665e;
+  --highlight: #fade78;
+  --last: #f09650;
+  --blue-body: #428eec;
+  --blue-membrane: #1c428c;
+  --blue-nucleus: #b0d8ff;
+  --green-body: #54c062;
+  --green-membrane: #1c622c;
+  --green-nucleus: #c0f6b6;
 }
 
 body {
@@ -33,20 +28,21 @@ main {
   display: flex;
   flex-wrap: wrap;
   gap: 24px;
-  max-width: 960px;
+  max-width: 1000px;
   margin: 0 auto;
   padding: 16px;
 }
 
 #board {
   flex: 1 1 360px;
-  max-width: 560px;
+  max-width: 600px;
   aspect-ratio: 1;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #panel {
-  flex: 1 1 240px;
+  flex: 1 1 260px;
 }
 
 h1 {
@@ -57,16 +53,6 @@ h1 {
 h2 {
   margin: 24px 0 8px;
   font-size: 18px;
-}
-
-#invite-link {
-  flex: 1 1 200px;
-  min-width: 0;
-  font: 14px ui-monospace, monospace;
-}
-
-a {
-  color: inherit;
 }
 
 #status {
@@ -86,8 +72,35 @@ a {
   align-items: center;
 }
 
-button, select {
+button, select, input {
   font: inherit;
+  color: var(--text);
+  background: #1e252a;
+  border: 1px solid var(--grid);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+button:not(:disabled) {
+  cursor: pointer;
+}
+
+button:not(:disabled):hover {
+  border-color: var(--highlight);
+}
+
+button:disabled {
+  opacity: 0.45;
+}
+
+#invite-link {
+  flex: 1 1 200px;
+  min-width: 0;
+  font: 14px ui-monospace, monospace;
+}
+
+a {
+  color: inherit;
 }
 
 #moves {
@@ -95,14 +108,42 @@ button, select {
   font-family: ui-monospace, monospace;
 }
 
-.cell { fill: var(--cell); stroke: var(--cell-line); stroke-width: 0.02; }
+/* The board. Sizes are in cells: the SVG's units. */
+.metal-0 { fill: #22252a; }
+.metal-1 { fill: #5c616a; }
+.metal-2 { fill: #3a3e46; }
+.metal-3 { fill: #181a1e; }
+.grid { stroke: var(--grid); stroke-width: 0.02; fill: none; }
+.grid.edge { stroke-width: 0.04; }
+.label { fill: var(--text-soft); font-size: 0.3px; text-anchor: middle; dominant-baseline: middle; }
+.cell { fill: transparent; }
 .clickable { cursor: pointer; }
-.pawn.blue { fill: var(--blue); }
-.pawn.green { fill: var(--green); }
-.pawn.dimmed { opacity: 0.45; }
+.cell.clickable:hover { fill: rgba(250, 222, 120, 0.08); }
+
+.microbe.blue .membrane { fill: var(--blue-membrane); }
+.microbe.blue .body { fill: var(--blue-body); }
+.microbe.blue .nucleus { fill: var(--blue-nucleus); }
+.microbe.green .membrane { fill: var(--green-membrane); }
+.microbe.green .body { fill: var(--green-body); }
+.microbe.green .nucleus { fill: var(--green-nucleus); }
+.dim { fill: rgba(0, 0, 0, 0.47); pointer-events: none; }
+
 .ring { fill: none; stroke-width: 0.06; pointer-events: none; }
-.ring.selected { stroke: var(--target); stroke-width: 0.08; }
-.ring.clone { stroke: var(--target); }
-.ring.jump { stroke: var(--target); stroke-dasharray: 0.12 0.1; }
-.ring.last { stroke: var(--last); }
+.ring.selected { stroke: var(--highlight); stroke-width: 0.07; }
+.ring.target.blue { stroke: var(--blue-nucleus); }
+.ring.target.green { stroke: var(--green-nucleus); }
+.ring.jump { stroke-dasharray: 0.13 0.13; }
+.ring.last { stroke: var(--last); stroke-width: 0.04; }
 .left { fill: var(--last); pointer-events: none; }
+
+/* The move animations (see web/board.js). Each scales or moves around the microbe's own middle. */
+#board g { transform-box: fill-box; transform-origin: center; }
+@keyframes grow { from { transform: scale(0); } }
+@keyframes fly { from { transform: translate(var(--from-x), var(--from-y)); } }
+@keyframes fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes swell { 50% { transform: scale(1.15); } }
+
+@media (prefers-reduced-motion: reduce) {
+  #board * { animation: none !important; }
+  .microbe.old { display: none; }
+}

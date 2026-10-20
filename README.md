@@ -159,6 +159,7 @@ Then open http://localhost:8000. Another port: `.venv/bin/schlurp web --port 808
 
 - The page loads our own Python into the browser with Pyodide (see [docs/adr/0005](docs/adr/0005-web-engine-in-the-browser-php-passes-moves.md)), so the first visit needs the internet and takes a few seconds. "Loaded in ... s" under the moves shows how long.
 - Click a pawn, then a cell: a solid ring is a clone, a dashed ring a jump. Or click an empty cell next to your pawns to clone there.
+- The board looks like the window's: microbes under a microscope. A move animates for under half a second; nothing moves between moves. If your system asks for less motion, there is no animation. On a phone the board zooms in, so the cells are big enough for a finger.
 - Two people on one computer: Undo takes back one move, New game starts again with the player picked in "First".
 - `schlurp web` first packs the Python files the page needs into `web/build/schlurp.zip`, so a change in the engine shows after a restart and a reload of the page. PHP's log goes to `records/web-server.log`.
 
