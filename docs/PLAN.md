@@ -92,7 +92,7 @@ What we know so far:
 - Taras's laptop has no PHP yet: W2 installs it with `brew install php`. GitHub's Ubuntu machines have it.
 
 Steps:
-- [ ] W1. The game in the browser. A script copies our Python files into `web/`; a Web Worker loads Pyodide and answers the page's messages (new game, legal moves, play a move). A plain board to click, for two people on one computer. Check: a pytest test sends the worker's messages through Node and compares the answers with the engine; we time how long the page takes to load.
+- [x] W1. The game in the browser. A script copies our Python files into `web/`; a Web Worker loads Pyodide and answers the page's messages (new game, legal moves, play a move). A plain board to click, for two people on one computer. Check: a pytest test sends the worker's messages through Node and compares the answers with the engine; we time how long the page takes to load.
 - [ ] W2. The game server in PHP: make a game with two links, take a move, give the moves after number n. SQLite on the laptop. Check: pytest starts `php -S` and tries every request, including a wrong secret, the wrong player and an old move number. CI installs PHP.
 - [ ] W3. Online play on Taras's laptop: one player makes a game and sends the link, the other opens it and plays. Each browser checks every move it gets. Reloading the page keeps your place in the game. Check: two browsers, then two computers on the same Wi-Fi.
 - [ ] W4. The page in the microscope look: the round lens, the microbes, clone, jump and infect animations, the side panel with pawns, turn and moves. Check: screenshots at laptop and phone width.

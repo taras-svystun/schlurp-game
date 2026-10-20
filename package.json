@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "description": "Only for the tests: Pyodide in Node, to check that our Python works in Pyodide as in CPython. The web page loads the same version from a CDN.",
+  "devDependencies": {
+    "pyodide": "314.0.7"
+  }
+}

@@ -16,6 +16,14 @@ python3 -m venv .venv
 
 Run the second line again after pulling new code, in case new packages were added.
 
+For the web version's tests you also need [Node](https://nodejs.org) 22 or newer. Then run, once and after pulling new code:
+
+```sh
+npm ci
+```
+
+It installs Pyodide into `node_modules/`, so the tests can run our Python the way the browser does. Without it that one test is skipped.
+
 ## Play
 
 ```sh
@@ -130,6 +138,20 @@ Compare any two of them:
 .venv/bin/schlurp tournament MCTS:0.2s Greedy --openings 50     # under a minute: Greedy wins fast
 ```
 
+## Web version
+
+The web version is being built (see the Web version section of [docs/PLAN.md](docs/PLAN.md)). For now it plays two people on one computer, in a browser:
+
+```sh
+.venv/bin/schlurp web
+```
+
+Then open http://localhost:8000. Another port: `.venv/bin/schlurp web --port 8080`. Ctrl+C stops it.
+
+- The page loads our own Python into the browser with Pyodide (see [docs/adr/0005](docs/adr/0005-web-engine-in-the-browser-php-passes-moves.md)), so the first visit needs the internet and takes a few seconds. "Loaded in ... s" under the moves shows how long.
+- Click a pawn, then a cell: a solid ring is a clone, a dashed ring a jump. Or click an empty cell next to your pawns to clone there. Undo takes back one move. New game starts again, with the player picked in "First".
+- `schlurp web` first packs the Python files the page needs into `web/build/schlurp.zip`, so a change in the engine shows after a restart and a reload of the page.
+
 ## Run the tests
 
 ```sh
@@ -162,6 +184,12 @@ Only the tournament and game record tests:
 
 ```sh
 .venv/bin/pytest tests/test_tournament.py tests/test_records.py
+```
+
+Only the web version's tests (one of them runs Pyodide in Node, see [First-time setup](#first-time-setup)):
+
+```sh
+.venv/bin/pytest tests/test_web.py
 ```
 
 Only the tests against the reference:

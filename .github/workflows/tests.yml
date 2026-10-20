@@ -17,5 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+      - uses: actions/setup-node@v4  # Node runs Pyodide for tests/test_web.py
+        with:
+          node-version: "22"
+      - run: npm ci
       - run: pip install -e ".[dev]"
       - run: pytest

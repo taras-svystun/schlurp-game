@@ -42,6 +42,8 @@ def main() -> None:
     tournament.add_argument("--seed", type=int, help="the same seed plays exactly the same games again (default: a random one, shown in the report)")
     tournament.add_argument("--workers", type=int, help=f"how many processes (default {default_workers()}, half the CPU cores)")
     tournament.add_argument("--save", action="store_true", help="save every game in a CSV file in records/tournaments")
+    web = commands.add_parser("web", help="Serve the web version on this computer, to play it in a browser.")
+    web.add_argument("--port", type=int, default=8000, help="the port to serve on (default 8000)")
     args = parser.parse_args()
 
     if args.command == "play":
@@ -56,6 +58,10 @@ def main() -> None:
         run(lambda: WatchScreen(players, Player[args.first.upper()]))
     elif args.command == "tournament":
         run_tournament_command(args)
+    elif args.command == "web":
+        from schlurp.web_build import serve
+
+        serve(args.port)
 
 
 def run_tournament_command(args: argparse.Namespace) -> None:

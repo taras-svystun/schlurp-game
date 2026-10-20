@@ -1,0 +1,93 @@
+/* A plain look for now; the microscope look comes in step W4. */
+:root {
+  --background: #f4f4f0;
+  --text: #222;
+  --text-soft: #666;
+  --cell: #e2e2da;
+  --cell-line: #bbb;
+  --blue: #2c6fd6;
+  --green: #2f9e44;
+  --target: #222;
+  --last: #e8590c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #16181c;
+    --text: #e8e8e8;
+    --text-soft: #999;
+    --cell: #2a2d33;
+    --cell-line: #444;
+    --target: #e8e8e8;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--text);
+  font: 16px/1.4 system-ui, sans-serif;
+}
+
+main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+#board {
+  flex: 1 1 360px;
+  max-width: 560px;
+  aspect-ratio: 1;
+  user-select: none;
+}
+
+#panel {
+  flex: 1 1 240px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  font-size: 24px;
+}
+
+#status {
+  font-weight: 600;
+  min-height: 2.8em;
+}
+
+.help {
+  color: var(--text-soft);
+  font-size: 14px;
+}
+
+.buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+button, select {
+  font: inherit;
+}
+
+#moves {
+  columns: 2;
+  font-family: ui-monospace, monospace;
+}
+
+.cell { fill: var(--cell); stroke: var(--cell-line); stroke-width: 0.02; }
+.clickable { cursor: pointer; }
+.pawn.blue { fill: var(--blue); }
+.pawn.green { fill: var(--green); }
+.pawn.dimmed { opacity: 0.45; }
+.ring { fill: none; stroke-width: 0.06; pointer-events: none; }
+.ring.selected { stroke: var(--target); stroke-width: 0.08; }
+.ring.clone { stroke: var(--target); }
+.ring.jump { stroke: var(--target); stroke-dasharray: 0.12 0.1; }
+.ring.last { stroke: var(--last); }
+.left { fill: var(--last); pointer-events: none; }

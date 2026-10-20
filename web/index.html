@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Schlurp</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="page.js"></script>
+</head>
+<body>
+  <main>
+    <svg id="board" viewBox="0 0 7 7" role="img" aria-label="The board"></svg>
+    <section id="panel">
+      <h1>Schlurp</h1>
+      <p id="status">Loading the game…</p>
+      <p id="pawns"></p>
+      <div class="buttons">
+        <button id="undo" disabled>Undo</button>
+        <button id="new" disabled>New game</button>
+        <label>First: <select id="first"><option value="blue">Blue</option><option value="green">Green</option></select></label>
+      </div>
+      <p class="help">Click a pawn, then a cell. A solid ring is a clone, a dashed ring a jump. Or click an empty cell next to your pawns to clone there.</p>
+      <ol id="moves"></ol>
+      <p id="loaded" class="help"></p>
+    </section>
+  </main>
+</body>
+</html>

@@ -195,3 +195,16 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - Before deciding, we ran perft and `Deepening:mix` in Pyodide 314.0.7 under Node: 1.7 times slower than CPython 3.11, with the same moves, and 1.1 s to start. That was fast enough not to write the engine again in JavaScript.
 - The glossary got **game link** and **game server**.
 
+
+## Step W1: the game in the browser (2026-10-20)
+
+**What:** `.venv/bin/schlurp web` serves a page at http://localhost:8000 where two people play on one computer. Our own engine runs in the browser, in Pyodide, inside a Web Worker. The look is plain for now.
+
+**Why:** ADR 0005 put the engine in the browser. This step checks that our Python really works there, before we build the game server and the look on top of it.
+
+**How:**
+- `schlurp/web_game.py` answers the page's messages (`new`, `play`, `undo`) with the whole state of the game: the cells, whose turn, the pawns, the moves, a pass, the result, and where each pawn can go. An illegal move is an error and changes nothing.
+- `schlurp/web_build.py` packs `engine.py`, `web_game.py`, `clicks.py` and the agents into `web/build/schlurp.zip`; the worker unpacks it into Pyodide. Pygame and the window stay out. `movable_pawns` and `reachable` moved from the Play window to `schlurp/clicks.py` for this.
+- `web/page.js` draws the board in SVG and clicks work like in the Play window. It knows no rules: everything it draws comes from the worker.
+- A test plays 20 random games, with illegal moves and undos, through Pyodide in Node and in our Python, and the answers are the same. Node and `npm ci` joined the CI.
+- In headless Chrome with an empty cache the first position showed after 1.8 s. Picking, cloning, jumping, Undo, a new game with Green first, and the phone width (390 px, no sideways scroll) all worked.
