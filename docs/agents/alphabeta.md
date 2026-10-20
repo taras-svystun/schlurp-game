@@ -134,7 +134,7 @@ Greedy jumped `g5e3` to infect e2, which scores −1 at depth 1, as good as any 
 
 ## How much pruning saves
 
-At depth 3, on positions after 20 moves of Greedy games, AlphaBeta looked at 4.7 times fewer positions than plain Minimax: from 2 to 15 times fewer, depending on the position. The best case for alpha-beta is when the best move is tried first, because then every other move is cut off quickly. Our moves come in board order, from a1 to g7, so often the best move comes late. Trying the most promising moves first (**move ordering**) is part of step 9.
+At depth 3, on positions after 20 moves of Greedy games, AlphaBeta looked at 4.7 times fewer positions than plain Minimax: from 2 to 15 times fewer, depending on the position. The best case for alpha-beta is when the best move is tried first, because then every other move is cut off quickly. Our moves come in board order, from a1 to g7, so often the best move comes late. Trying the most promising moves first (**move ordering**) is what [Deepening](deepening.md) adds.
 
 Time per move, measured on positions from Greedy games:
 
@@ -144,9 +144,9 @@ Time per move, measured on positions from Greedy games:
 | 3 | 0.15 s | 0.4 s |
 | 4 | 3 s | 9 s |
 
-Each move of depth costs about 10 to 20 times more, because a position has 20 to 80 legal moves. So the default depth is 3: quick enough to play against and for hints, and depth 4 waits for step 9.
+Each move of depth costs about 10 to 20 times more, because a position has 20 to 80 legal moves. So the default depth is 3: quick enough to play against. [Deepening](deepening.md) makes depth 4 take 0.65 s.
 
-AlphaBeta at depth 3 is now the agent behind the Hint button in Play.
+AlphaBeta at depth 3 gave the hints in Play in step 7; since step 9 `Deepening:mix` does.
 
 ## What tournaments show
 

@@ -2,7 +2,8 @@
 
 It has a checkbox for each part:
 - move scores, drawn on the board: each empty cell shows the best score of the moves landing there,
-  and the chosen move is yellow, with a line from the pawn for a jump;
+  and the chosen move is yellow, with a line from the pawn for a jump; "≤" marks a score that is only an
+  upper bound (Deepening proves only that such a move is worse than its best one);
 - the expected line of play, in move names like "d4 a1c2";
 - the work done: positions looked at, how deep, and how long it took.
 """
@@ -21,23 +22,25 @@ from schlurp.ui.widgets import Checkbox
 BADGE_WIDTH, BADGE_HEIGHT = 44, 22
 
 
-def score_text(score: float) -> str:
-    """+3, -2 and 0 for whole numbers (like pawns), 0.25 for the rest."""
+def score_text(score: float, upper_bound: bool = False) -> str:
+    """+3, -2 and 0 for whole numbers (like pawns), 0.25 for the rest. An upper bound gets a "≤" in front."""
     if float(score).is_integer():
-        return f"{score:+.0f}" if score else "0"
-    return f"{score:.2f}"
+        text = f"{score:+.0f}" if score else "0"
+    else:
+        text = f"{score:.2f}"
+    return f"≤{text}" if upper_bound else text
 
 
-def scores_by_cell(thoughts: Thoughts) -> dict[int, float]:
-    """The best score of the moves landing on each cell.
+def scores_by_cell(thoughts: Thoughts) -> dict[int, tuple[float, bool]]:
+    """The best score of the moves landing on each cell, and whether it is only an upper bound.
 
     One clone and several jumps can land on the same cell, and a cell has room for one number.
     The best one is what matters: it is the move the agent would play to get there.
     """
-    best: dict[int, float] = {}
+    best: dict[int, tuple[float, bool]] = {}
     for move, score in thoughts.scores.items():
-        if move.target not in best or score > best[move.target]:
-            best[move.target] = score
+        if move.target not in best or score > best[move.target][0]:
+            best[move.target] = (score, move in thoughts.upper_bounds)
     return best
 
 
@@ -103,14 +106,14 @@ class ThoughtsPanel:
             # A jump: show which pawn jumps, as the hint does in Play.
             pygame.draw.line(surface, HIGHLIGHT, cell_center(chosen.source), cell_center(chosen.target), width=3)
             pygame.draw.circle(surface, HIGHLIGHT, cell_center(chosen.source), PAWN_RADIUS + 5, width=3)
-        for cell, score in scores_by_cell(thoughts).items():
+        for cell, (score, upper_bound) in scores_by_cell(thoughts).items():
             is_chosen = cell == chosen.target
             badge = pygame.Rect(0, 0, BADGE_WIDTH, BADGE_HEIGHT)
             badge.center = cell_center(cell)
             pygame.draw.rect(surface, HIGHLIGHT if is_chosen else METAL[3], badge, border_radius=BADGE_HEIGHT // 2)
             if not is_chosen:
                 pygame.draw.rect(surface, METAL[1], badge, width=1, border_radius=BADGE_HEIGHT // 2)
-            image = self.font.render(score_text(score), True, BACKGROUND if is_chosen else TEXT)
+            image = self.font.render(score_text(score, upper_bound), True, BACKGROUND if is_chosen else TEXT)
             surface.blit(image, image.get_rect(center=badge.center))
 
     def _text(self, surface: pygame.Surface, paragraphs: list[str]) -> None:

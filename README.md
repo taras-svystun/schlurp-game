@@ -32,7 +32,7 @@ Two people can share the computer, or you can play against an AI. With an AI age
 - The orange ring shows the last move, and a dot the cell a jump left. The panel on the right shows each player's pawns, whose turn it is, what the last move did and the list of moves.
 - An AI agent thinks while the window keeps drawing, and plays its move at least 0.7 seconds after yours, so you see your own move land first.
 
-- Press H or the Hint button when you are stuck: AlphaBeta (see [AI agents](#ai-agents)) thinks for you, and its move pulses on the board: a yellow ring on the cell to move to, and for a jump a line from the pawn that jumps. It only shows the move; you still play it, or another one. The hint goes away after any move or Undo.
+- Press H or the Hint button when you are stuck: Deepening with the `mix` heuristic (see [AI agents](#ai-agents)) thinks for you, for at most half a second, and its move pulses on the board: a yellow ring on the cell to move to, and for a jump a line from the pawn that jumps. It only shows the move; you still play it, or another one. The hint goes away after any move or Undo.
 
 Keys: U or Backspace undoes (one move between two people, or back to your last turn against an AI), N starts a new game with the same players, M goes back to the menu, H shows a hint, Esc quits. The Undo, New, Menu and Hint buttons do the same.
 
@@ -48,6 +48,7 @@ Two AI agents play each other in a window, and you see what each one thinks befo
 .venv/bin/schlurp watch AlphaBeta Greedy                 # AlphaBeta looks 3 moves ahead
 .venv/bin/schlurp watch AlphaBeta:2 AlphaBeta            # depth 2 against depth 3
 .venv/bin/schlurp watch AlphaBeta:mix AlphaBeta          # the mix heuristic against plain pawns
+.venv/bin/schlurp watch Deepening:mix AlphaBeta          # "≤" marks a score that is only an upper bound
 ```
 
 The first agent plays Blue, the second Green. You can also pick an AI agent for both players in the start menu (`.venv/bin/schlurp play`).
@@ -109,7 +110,8 @@ Each agent is explained in its own file in [docs/agents](docs/agents):
 
 - **Random** ([random.md](docs/agents/random.md)): plays any legal move. The baseline every other agent must beat.
 - **Greedy** ([greedy.md](docs/agents/greedy.md)): looks one move ahead and plays the move with the best pawn difference. Wins 499 games of 500 against Random.
-- **AlphaBeta** ([alphabeta.md](docs/agents/alphabeta.md)): looks 3 moves ahead (my move, the answer, my next move), expects the opponent's best answer, and skips the lines that cannot change its choice. It gives the hints in Play. Set the depth after a colon: `AlphaBeta:2` is faster, `AlphaBeta:4` takes seconds per move. Name a heuristic too: `AlphaBeta:mix` is stronger at the same depth but takes about 0.7 s per move.
+- **AlphaBeta** ([alphabeta.md](docs/agents/alphabeta.md)): looks 3 moves ahead (my move, the answer, my next move), expects the opponent's best answer, and skips the lines that cannot change its choice. Set the depth after a colon: `AlphaBeta:2` is faster, `AlphaBeta:4` takes seconds per move. Name a heuristic too: `AlphaBeta:mix` is stronger at the same depth but takes about 0.7 s per move.
+- **Deepening** ([deepening.md](docs/agents/deepening.md)): AlphaBeta that tries the most promising moves first and looks 1, 2, 3, ... moves ahead until its time is up, then plays the best move of the deepest search it finished. 0.5 s per move unless told otherwise: `Deepening:0.2s` is quicker, `Deepening:2s` deeper, `Deepening:4` searches exactly 4 moves deep whatever the time, and `Deepening:1s:mix` sets the time and the heuristic. `Deepening:mix` is the strongest agent we have, and it gives the hints in Play.
 - **Heuristics** ([heuristics.md](docs/agents/heuristics.md)): what AlphaBeta guesses where its look-ahead stops. `pawns` (the default), `safe`, `holes`, `exposed`, `mobility`, and `mix` (safe pawns and holes, the best we found). You can try your own weights in the agent name: `AlphaBeta:2:safe=0.5:holes=-1` is `mix` at depth 2.
 
 Compare any two of them:
@@ -121,6 +123,8 @@ Compare any two of them:
 .venv/bin/schlurp tournament AlphaBeta Greedy --openings 100     # about 2 minutes: depth 3 takes 0.15 s per move
 .venv/bin/schlurp tournament AlphaBeta:2:mix AlphaBeta:2 --openings 100     # about 4 minutes
 .venv/bin/schlurp tournament AlphaBeta:2:safe=1:holes=-0.5 AlphaBeta:2:mix --openings 50     # try your own weights
+.venv/bin/schlurp tournament Deepening:0.2s:mix Deepening:0.2s --openings 100     # about 7 minutes
+.venv/bin/schlurp tournament Deepening:4 AlphaBeta:3 --openings 20     # a depth, so the games can be repeated exactly
 ```
 
 ## Run the tests
@@ -146,7 +150,7 @@ Only the window tests (no real window opens):
 Only the agents' tests:
 
 ```sh
-.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py tests/test_alphabeta_agent.py tests/test_heuristics.py
+.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py tests/test_alphabeta_agent.py tests/test_heuristics.py tests/test_deepening_agent.py
 ```
 
 Only the tournament and game record tests:

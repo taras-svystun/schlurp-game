@@ -154,7 +154,15 @@ def test_a_cell_shows_the_best_score_of_the_moves_landing_there():
     thoughts = Thoughts(
         Move.parse("c3"), scores={Move.parse("c3"): 1, Move.parse("a1c3"): 3, Move.parse("e5c3"): -2, Move.parse("d4"): 0}
     )
-    assert scores_by_cell(thoughts) == {Move.parse("c3").target: 3, Move.parse("d4").target: 0}
+    assert scores_by_cell(thoughts) == {Move.parse("c3").target: (3, False), Move.parse("d4").target: (0, False)}
+
+
+def test_an_upper_bound_is_shown_with_a_sign():
+    thoughts = Thoughts(
+        Move.parse("c3"), scores={Move.parse("c3"): 2, Move.parse("d4"): -3}, upper_bounds=frozenset({Move.parse("d4")})
+    )
+    assert scores_by_cell(thoughts)[Move.parse("d4").target] == (-3, True)
+    assert score_text(-3, upper_bound=True) == "≤-3"
 
 
 def test_scores_and_work_are_short():
@@ -237,3 +245,14 @@ def test_the_watch_command_refuses_an_unknown_agent():
     result = subprocess.run([schlurp, "watch", "Greedy", "Nobody"], capture_output=True, text=True)
     assert result.returncode != 0
     assert "No agent called 'Nobody'" in result.stderr
+
+
+def test_a_long_agent_name_fits_next_to_the_pawn_count():
+    from schlurp.agents import make_agent
+    from schlurp.ui.game_screen import fit
+
+    screen = WatchScreen({BLUE: make_agent("Deepening:0.3s:safe=0.5:holes=-1"), GREEN: GreedyAgent()})
+    font, small = screen.view.font, screen.view.font_small
+    assert fit("Blue (Greedy)", [font, small], 150).get_width() == font.size("Blue (Greedy)")[0]  # fits as it is
+    assert fit(screen.player_name(BLUE), [font, small], 150).get_width() <= 150
+    screen.draw(pygame.Surface((WIDTH, HEIGHT)))

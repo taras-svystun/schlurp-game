@@ -117,11 +117,11 @@ Adding holes to safe pawns helps, but only with the right weight: −2 makes the
 
 - **`mix` is clearly stronger than `pawns` at the same depth**, with a new seed, at depth 2 and at depth 3.
 - **But one more move of depth is worth more than a better guess.** `mix` at depth 2 loses 4 games out of 5 to plain `pawns` at depth 3, and still takes half the time per move. Looking ahead finds what really happens; a heuristic only guesses it.
-- So at the same time per move, the extra depth wins. That matters in step 9, where agents get a time limit instead of a depth: then `mix` has to earn its cost by searching less deeply. We will compare them again there.
+- So is `mix` worth its cost at the same time per move? Step 9 answered it: with a time limit of 0.2 s, `mix` searches about one move less deeply and still wins 65.5% ± 6.5% against `pawns` (see [deepening.md](deepening.md#what-tournaments-show)).
 - `mix` games are longer (80 moves at depth 2, against 59 for two plain agents), and 7 of 200 ended by the fifty-move rule: an agent that cares about safe pawns and holes sometimes prefers to shuffle by jumping rather than open its group.
 - Moving first helped again: Blue won 113 games and Green 80 at depth 2, 38 and 22 at depth 3.
 
-**What we use.** AlphaBeta keeps `pawns` unless you name another heuristic: at depth 3 it plays in 0.15 s, which suits the Hint button and a quick game. `AlphaBeta:mix` is stronger at the same depth and takes about 0.7 s per move.
+**What we use.** AlphaBeta and Deepening keep `pawns` unless you name another heuristic, so a plain name stays quick. The hints in Play come from `Deepening:mix`.
 
 ## An example on a real position
 

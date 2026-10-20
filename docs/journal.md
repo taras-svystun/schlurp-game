@@ -145,3 +145,17 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - Three stages of tournaments at depth 2, each tournament under 10 minutes: each feature alone against `pawns`, then mixes against the best single feature (`safe=0.5`), then the winner again with a new seed, because trying many weights finds some winners by luck. Safe pawns helped most (79%), holes helped only with a negative weight (70%, and 21.5% with a positive one), exposed cells a little, mobility not at all while being the slowest.
 - `mix` beats `pawns` 71.8% ± 6.1% at depth 2 and 73.3% ± 11.3% at depth 3, but loses 78% of games to `pawns` one move deeper: depth is worth more than a better guess. AlphaBeta keeps `pawns` by default, which stays fast for hints; `AlphaBeta:mix` is there to choose.
 - In all, the step's tournaments ran for about 45 minutes, in short runs. Stage 2 took 17 minutes instead of the 10 estimated, because the mixes think slower than measured alone.
+
+## Step 9: Deepening (2026-10-20)
+
+**What:** The Deepening agent: AlphaBeta with move ordering, iterative deepening, a narrow window at the top and a time limit (0.5 s per move unless told otherwise). A faster engine for searches. `Deepening:mix` now gives the hints in Play. `docs/agents/deepening.md` explains it.
+
+**Why:** AlphaBeta tried moves in board order and had only a fixed depth, so depth 4 took 3 seconds on average and up to 9. A person wants an agent that answers in a known time, and step 8 left a question open: is `mix` worth its cost at the same time per move?
+
+**How:**
+- Following Awalé's Deepening: it searches depth 1, 2, 3, ..., remembers the best move in every position, and tries it first next time, then the moves with the best pawn difference. At a fixed depth it chooses exactly AlphaBeta's moves from the same seed; tests check it at depths 1 to 3, with `pawns` and with `mix`.
+- Moves worse than the best at the top get only an upper bound, shown as `≤` in Watch. `Thoughts` got `upper_bounds` for it.
+- Each depth costs 8 to 10 times the one before. We measured when a late depth still finishes: of 71 started after a fifth of the time, 1 did. So it does not start a depth after a fifth of its time, and returns early instead.
+- The profiler showed a search spending a fifth of its time checking moves it took from `legal_moves()` and another fifth reading `Player.value`. The engine got `play_legal` (no check, for searches only) and constants for the pawn numbers in `ends_game`: 28% faster, with the tests against `ataxx` still passing. Depth 4 now takes 0.65 s instead of 3.
+- Watch fits long agent names next to the pawn count, the status takes at most 2 lines, and the start menu is centred for 5 agents. Screenshots showed all three.
+- Tournaments: `Deepening:0.2s` beats `AlphaBeta:3` 70.5% ± 8.9% while thinking less, and at the same 0.2 s `mix` beats `pawns` 65.5% ± 6.5%, which answers step 8's question. Time-limited games cannot be repeated exactly; a depth can.

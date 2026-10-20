@@ -22,6 +22,8 @@ class Thoughts:
     line: tuple[Move, ...] = ()
     positions: int = 0  # how many positions it looked at
     depth: int = 0  # how many moves ahead it looked
+    # Moves whose score is only an upper bound: the move is worth this score or less (Deepening).
+    upper_bounds: frozenset[Move] = frozenset()
 
 
 class Agent(ABC):
