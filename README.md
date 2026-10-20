@@ -136,7 +136,9 @@ Compare any two of them:
 .venv/bin/pytest
 ```
 
-This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 31 seconds.
+This also checks our rules against the [`ataxx`](https://pypi.org/project/ataxx/) package: the number of move sequences from the start (perft, up to 5 moves deep) and 250 random games played in both engines side by side, compared after every move. All the tests take about 45 seconds.
+
+GitHub runs all the tests again after every push (`.github/workflows/tests.yml`). See the result on the repository's **Actions** tab, or with `gh run list`: a red cross means a test failed there.
 
 Only the quick rule tests, without the reference:
 

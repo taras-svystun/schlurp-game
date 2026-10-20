@@ -17,8 +17,9 @@ schlurp = "schlurp.cli:main"
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["schlurp", "schlurp.agents", "schlurp.ui"]
+# Every folder inside schlurp/ is installed, so a new one cannot be forgotten here.
+[tool.setuptools.packages.find]
+include = ["schlurp*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
