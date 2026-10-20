@@ -171,3 +171,15 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `MCTS:1000` sets the playouts, `MCTS:0.2s` the time, both together stop at whichever comes first. `Thoughts` got `playouts`.
 - Tournaments (`--seed 31`, about 4 minutes in all): `MCTS:0.2s` beats Random 100%, but loses to Greedy and to `Deepening:0.2s` 99 games of 100, in 12 moves. With 1 s per move it still loses 95%.
 - We checked that this is the method, not a bug: random playouts barely see who is ahead. From a position with 1 pawn against 10, the side with 1 pawn still wins 41% of random games. With about 200 playouts per half second over 20 to 80 moves, that signal is lost in noise. Smarter or shorter playouts with a heuristic are the way to make it stronger.
+
+## Step 11: tidy-up before the web version (2026-10-20)
+
+**What:** GitHub runs the tests after every push. `pyproject.toml` finds every folder in `schlurp/` by itself. An agent that raises an error no longer closes the window. The plan has a Web version section.
+
+**Why:** The web version will add new folders and a second language, so a forgotten folder or a broken push should show at once. A crash of a new agent closed the window and lost the game on the board.
+
+**How:**
+- `.github/workflows/tests.yml` installs the project on Ubuntu with Python 3.11 and runs `pytest`, with SDL's dummy drivers because there is no screen.
+- `[tool.setuptools.packages.find]` with `include = ["schlurp*"]`. A wheel built with an extra empty folder in `schlurp/` had it inside.
+- When an agent raises, the status says "Blue (Name) crashed.", the message shows the error in at most 3 lines, and the full traceback goes to the terminal. Nobody moves until Undo, New or Menu. A broken hint agent only shows a message. Screenshots checked that a long error stays above the buttons.
+- Taras chose the web priorities: online play between two people first, then `Deepening:mix`, then hints; an MVP with game links and no accounts; English first. Accounts, French and tournaments on the site went to "Later".

@@ -62,18 +62,43 @@ Words in **bold** are defined in `../CONTEXT.md`.
 - [x] 8. Better heuristics: mobility, safe pawns, exposed cells, holes; then tournaments to choose the weights.
 - [x] 9. Deepening: move ordering, iterative deepening and a time limit.
 - [x] 10. MCTS.
+- [x] 11. Tidy-up: CI on GitHub, packages found by `pyproject.toml`, agent errors shown in the window.
 
 After each agent step, run a tournament against the agents we already have, to see if the new one is really stronger.
 
+## Web version
+
+Pascal Peyremorte, who wrote the Delphi Schlurp, is Taras's friend and offers to host it on his website. The web version is not a copy of the Python one. In order of importance, it should let:
+
+1. two people play each other online, on different computers;
+2. a person play against an AI agent online: only `Deepening:mix`;
+3. a person ask the AI for a hint.
+
+What we agreed:
+- An MVP first: no accounts. One player starts a game and sends a link; whoever opens it plays the other side.
+- The interface is in English.
+- The page talks to the game in small messages ("move a1c3" in, "the new position" out). The page then does not care where the engine runs: on a Python server, or in the browser. So the page can be built before we know what Pascal's hosting can run.
+- Waiting for Pascal: what his hosting can run, how we deploy to it, and at what address. Then an ADR records where the engine runs.
+
+What we know so far:
+- Our engine and agents never import Pygame, so they can run behind any front end. The Pygame drawing does not carry over: the board is drawn again for the browser.
+- Online play needs something in the middle that passes the moves on. The main choice is where the game and the agents run:
+  - **a Python server** (for example FastAPI with WebSockets) running our engine and agents, with a thin page in the browser. Reuses all our code, and the server checks every move; needs hosting that can run Python all the time, and the agents use the server's CPU;
+  - **in the browser**: our Python with Pyodide (reuses the code, slower start and slower agents, which with a time limit only means less deep), or the engine written again in JavaScript or TypeScript (fast, but the rules exist twice). Then a small server still passes the moves between two players; for a turn-based game, PHP asking every second is enough.
+- Game records are already JSON with moves in standard notation, so they work on a web page as they are.
+
+Steps (to be split further once Pascal answers):
+- [ ] W1. The messages between the page and the game, and a server with game links, running on Taras's laptop: two people on the same Wi-Fi can play.
+- [ ] W2. The page: the board in the microscope look, clicks, animations, the side panel.
+- [ ] W3. Put it online on Pascal's site.
+- [ ] W4. Play against `Deepening:mix` online.
+- [ ] W5. Hints online.
+
 ## Later
 
-- **A web version, played online.** Pascal Peyremorte, who wrote the Delphi Schlurp, is Taras's friend and offers to host it on his website, so two people on different computers can play each other. It should get everything the Python version has: Play against AI agents, Watch, tournaments and game records. Do not start it until the Python engine, the agents and the three modes are done. What we know so far:
-  - Our engine and agents never import Pygame, so they can run behind any front end.
-  - Online play between two computers needs something in the middle that passes the moves on. The main choice is where the game and the agents run:
-    - **a Python server** (for example FastAPI with WebSockets) running our engine and agents, with a thin page in the browser. Reuses all our code; needs hosting that can run Python, and the agents use the server's CPU;
-    - **in the browser**: our Python with Pyodide (reuses the code, slower start and slower agents), or the engine and agents written again in JavaScript or TypeScript (fast, but the rules exist twice; our perft counts and game records would check that both agree). A small server is still needed to pass moves between two players.
-  - Game records are already JSON with moves in standard notation, so they work on a web page as they are.
-  - Open questions for Pascal: what his hosting can run (only static files, PHP, or Python), and whether he wants to work on it with us.
+- **Accounts, for the web version.** A player keeps one name across visits, sees their past games, and sees who is online to start a game with them, instead of sending a link. A rating could come after that.
+- **A French interface, for the web version.** Pascal will likely share the game with French friends.
+- **Tournaments on the website.** Unlikely: 500 games take minutes of CPU, on the server or in a visitor's browser. Tournaments stay in the terminal.
 - Outside Ataxx engines (over the UAI protocol, which the `ataxx` package speaks) as stronger opponents.
 - Blocked cells, as in tournament Ataxx.
 - A bitboard, if the profiler shows Deepening or MCTS need it (see `adr/0003`).
