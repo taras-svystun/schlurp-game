@@ -1,51 +1,17 @@
-"""The game server in web/api.php, run by PHP's own small web server, with an SQLite file of its own."""
+"""The game server in web/api.php, run by PHP's own small web server (see php_server in conftest.py)."""
 
 import json
-import os
-import shutil
-import socket
-import subprocess
-import time
 import urllib.error
-import urllib.parse
-import urllib.parse
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import pytest
 
-WEB_DIR = Path(__file__).resolve().parents[1] / "web"
 
-
-@pytest.fixture(scope="module")
-def server(tmp_path_factory):
-    """The address of a running game server, which keeps its games in a temporary SQLite file."""
-    if not shutil.which("php"):
-        if os.environ.get("CI"):
-            pytest.fail("PHP must be installed on CI")
-        pytest.skip("needs PHP: brew install php")
-    with socket.socket() as free:
-        free.bind(("127.0.0.1", 0))
-        port = free.getsockname()[1]
-    env = {**os.environ, "SCHLURP_SQLITE": str(tmp_path_factory.mktemp("server") / "games.sqlite")}
-    # Several workers, so requests sent at the same moment really run at the same moment.
-    env["PHP_CLI_SERVER_WORKERS"] = "4"
-    php = subprocess.Popen(
-        ["php", "-S", f"127.0.0.1:{port}", "-t", str(WEB_DIR)],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
-    address = f"http://127.0.0.1:{port}/api.php"
-    for _ in range(100):
-        try:
-            socket.create_connection(("127.0.0.1", port), timeout=0.1).close()
-            break
-        except OSError:
-            time.sleep(0.05)
-    yield address
-    php.terminate()
-    php.wait()
+@pytest.fixture
+def server(php_server):
+    return f"{php_server}/api.php"
 
 
 def call(address: str, action: str, body: dict | None = None, method: str | None = None, **query) -> tuple[int, dict]:

@@ -54,6 +54,21 @@ h1 {
   font-size: 24px;
 }
 
+h2 {
+  margin: 24px 0 8px;
+  font-size: 18px;
+}
+
+#invite-link {
+  flex: 1 1 200px;
+  min-width: 0;
+  font: 14px ui-monospace, monospace;
+}
+
+a {
+  color: inherit;
+}
+
 #status {
   font-weight: 600;
   min-height: 2.8em;

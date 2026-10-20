@@ -8,7 +8,8 @@ import { loadPyodide } from "https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyod
 async function startGame() {
   const [pyodide, zip] = await Promise.all([
     loadPyodide(),
-    fetch("build/schlurp.zip").then((response) => {
+    // "no-cache": ask the server every time, so a rebuilt zip is never stale. The zip is small.
+    fetch("build/schlurp.zip", { cache: "no-cache" }).then((response) => {
       if (!response.ok) throw new Error(`build/schlurp.zip: ${response.status} ${response.statusText}`);
       return response.arrayBuffer();
     }),

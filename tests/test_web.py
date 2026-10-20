@@ -7,7 +7,6 @@ import re
 import shutil
 import subprocess
 import sys
-import threading
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -80,6 +79,28 @@ def test_undo_takes_back_one_move():
     assert web.handle({"type": "undo"}) == start
 
 
+def test_an_online_move_must_come_from_the_player_to_move():
+    web = WebGame()
+    before = web.state()
+    assert web.handle({"type": "play", "move": "a1a3", "player": "green"}) == {"type": "error", "message": "It is not Green's turn"}
+    assert web.state() == before
+    assert web.handle({"type": "play", "move": "b6", "player": "blue"})["moves"] == ["b6"]
+
+
+def test_a_new_game_can_start_with_moves_already_played():
+    moves = [{"move": "b6", "player": "blue"}, {"move": "a1a3", "player": "green"}]
+    state = WebGame().handle({"type": "new", "first": "blue", "moves": moves})
+    assert state["moves"] == ["b6", "a1a3"] and state["to_move"] == "blue"
+    # Green first: then Blue's b6 comes out of turn. The game before the message stays as it was.
+    web = WebGame()
+    web.handle({"type": "play", "move": "f2"})
+    answer = web.handle({"type": "new", "first": "green", "moves": moves})
+    assert answer == {"type": "error", "message": "Move 1: It is not Blue's turn"}
+    assert web.state()["moves"] == ["f2"]
+    assert web.handle({"type": "new", "moves": "b6"})["type"] == "error"
+    assert web.handle({"type": "new", "moves": ["b6"]})["type"] == "error"
+
+
 def test_a_pass_is_shown():
     # Green's only pawn is walled in by Blue, and Blue still has empty cells: after Blue's move, Blue moves again.
     start = Position.setup(
@@ -143,20 +164,16 @@ def test_the_page_and_the_tests_use_the_same_pyodide():
     assert in_page == in_tests
 
 
-def test_the_server_serves_the_page_and_the_zip():
+def test_php_serves_the_page_and_the_zip(php_server):
     web_build.build()
-    server = web_build.make_server(port=0)
-    threading.Thread(target=server.serve_forever, daemon=True).start()
-    try:
-        address = f"http://localhost:{server.server_address[1]}"
-        with urllib.request.urlopen(f"{address}/") as page:
-            assert b"<title>Schlurp</title>" in page.read()
-        with urllib.request.urlopen(f"{address}/build/schlurp.zip") as response:
-            assert response.headers["Cache-Control"] == "no-cache"
-            assert response.read(2) == b"PK"
-    finally:
-        server.shutdown()
-        server.server_close()
+    with urllib.request.urlopen(f"{php_server}/") as page:
+        assert b"<title>Schlurp</title>" in page.read()
+    with urllib.request.urlopen(f"{php_server}/build/schlurp.zip") as response:
+        assert response.read(2) == b"PK"
+
+
+def test_the_lan_address_is_an_ip_address():
+    assert re.fullmatch(r"\d+\.\d+\.\d+\.\d+", web_build.lan_address())
 
 
 def random_messages(seed: int) -> list[dict]:

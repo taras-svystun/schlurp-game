@@ -15,11 +15,35 @@
       <h1>Schlurp</h1>
       <p id="status">Loading the game…</p>
       <p id="pawns"></p>
-      <div class="buttons">
-        <button id="undo" disabled>Undo</button>
-        <button id="new" disabled>New game</button>
-        <label>First: <select id="first"><option value="blue">Blue</option><option value="green">Green</option></select></label>
+
+      <!-- Two people on this computer. -->
+      <div id="local">
+        <div class="buttons">
+          <button id="undo" disabled>Undo</button>
+          <button id="new" disabled>New game</button>
+          <label>First: <select id="first"><option value="blue">Blue</option><option value="green">Green</option></select></label>
+        </div>
+        <h2>Play online</h2>
+        <div class="buttons">
+          <label>You play: <select id="you"><option value="blue">Blue</option><option value="green">Green</option></select></label>
+          <button id="create" disabled>Start an online game</button>
+        </div>
+        <p class="help">You get a link to send to the other player. Who moves first is the "First" above.</p>
       </div>
+
+      <!-- An online game: the address holds the game and this player's secret. -->
+      <div id="online" hidden>
+        <p id="you-are"></p>
+        <div id="invite" hidden>
+          <p>Send this link to the other player:</p>
+          <div class="buttons">
+            <input id="invite-link" readonly>
+            <button id="copy">Copy</button>
+          </div>
+        </div>
+        <p class="help">Keep this page's address to come back to the game. <a href="./">Leave this game</a></p>
+      </div>
+
       <p class="help">Click a pawn, then a cell. A solid ring is a clone, a dashed ring a jump. Or click an empty cell next to your pawns to clone there.</p>
       <ol id="moves"></ol>
       <p id="loaded" class="help"></p>

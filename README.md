@@ -24,13 +24,14 @@ npm ci
 
 It installs Pyodide into `node_modules/`, so the tests can run our Python the way the browser does. Without it that one test is skipped.
 
-The game server's tests need PHP 7.4 or newer. On a Mac:
+The web version and its server tests need PHP 7.4 or newer, as the `php` command. Homebrew no longer builds PHP for macOS 14, so on that Mac install [MacPorts](https://www.macports.org/install.php), then:
 
 ```sh
-brew install php
+sudo port install php84 php84-sqlite
+sudo port select --set php php84
 ```
 
-Without PHP those tests are skipped.
+On a newer macOS, `brew install php` is enough. Without PHP the server tests are skipped.
 
 ## Play
 
@@ -148,7 +149,7 @@ Compare any two of them:
 
 ## Web version
 
-The web version is being built (see the Web version section of [docs/PLAN.md](docs/PLAN.md)). For now it plays two people on one computer, in a browser:
+The web version is being built (see the Web version section of [docs/PLAN.md](docs/PLAN.md)). For now it runs on your computer and needs PHP (see [First-time setup](#first-time-setup)):
 
 ```sh
 .venv/bin/schlurp web
@@ -157,12 +158,27 @@ The web version is being built (see the Web version section of [docs/PLAN.md](do
 Then open http://localhost:8000. Another port: `.venv/bin/schlurp web --port 8080`. Ctrl+C stops it.
 
 - The page loads our own Python into the browser with Pyodide (see [docs/adr/0005](docs/adr/0005-web-engine-in-the-browser-php-passes-moves.md)), so the first visit needs the internet and takes a few seconds. "Loaded in ... s" under the moves shows how long.
-- Click a pawn, then a cell: a solid ring is a clone, a dashed ring a jump. Or click an empty cell next to your pawns to clone there. Undo takes back one move. New game starts again, with the player picked in "First".
-- `schlurp web` first packs the Python files the page needs into `web/build/schlurp.zip`, so a change in the engine shows after a restart and a reload of the page.
+- Click a pawn, then a cell: a solid ring is a clone, a dashed ring a jump. Or click an empty cell next to your pawns to clone there.
+- Two people on one computer: Undo takes back one move, New game starts again with the player picked in "First".
+- `schlurp web` first packs the Python files the page needs into `web/build/schlurp.zip`, so a change in the engine shows after a restart and a reload of the page. PHP's log goes to `records/web-server.log`.
+
+### Play online
+
+Pick "You play" and "First", then press "Start an online game". The page shows a link: send it to the other player. Whoever opens it plays the other colour. Each of you can reload the page, or come back later with the same address, and the game is still there. There is no Undo online.
+
+To try it alone, open the link in a private window: it is a second player with nothing shared.
+
+On two computers on the same Wi-Fi:
+
+```sh
+.venv/bin/schlurp web --lan
+```
+
+It prints an address like `http://192.168.1.20:8000`. Open that address on your computer too, not `localhost`, so the link you send points to your computer. The first time, macOS may ask whether PHP may accept incoming connections: say yes. Without `--lan`, only your own computer can open the page.
 
 ### The game server
 
-`web/api.php` stores the moves of online games and passes them between the two browsers. It is not used by the page yet (that is step W3), but you can run it and talk to it by hand:
+`web/api.php` stores the moves of online games and passes them between the two browsers. `schlurp web` runs it for the page, but you can also run it alone and talk to it by hand:
 
 ```sh
 php -S localhost:8001 -t web

@@ -221,3 +221,16 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - The same plain SQL works in MariaDB and SQLite. Without a `config.php` (never in git) it uses `records/web-games.sqlite`. Games nobody moved in for 30 days are deleted.
 - Written for PHP 7.4 and newer, since we do not know Pascal's version yet. GitHub runs the tests on 7.4.
 - `brew install php` failed: Homebrew no longer builds PHP for macOS 14, and building it from source broke. The tests skip on the laptop and run on GitHub, where they passed.
+
+## Step W3: online play on the laptop (2026-10-20)
+
+**What:** "Start an online game" on the page gives a link for the other player. Two browsers play through the game server, each checking the other's moves. `schlurp web` now runs PHP's web server, and `schlurp web --lan` lets a second computer on the same Wi-Fi join.
+
+**Why:** Online play between two people is the first thing the web version must do.
+
+**How:**
+- A player's address is `?game=<id>&seat=<secret>`, so reloading or coming back later reopens the game: the page asks the server for every move and the worker replays them. The creator's address also holds the other player's link after `#`, which browsers never send to a server, so it can be shown again.
+- The page asks the server once a second for new moves. Each one goes to the worker with the player who sent it; a move out of turn or against the rules stops the game with a message. Our own move is stored on the server first, then played.
+- `web_game.py` learned moves with a player, and a new game with moves already played. Online steps run one at a time, so a move and a check for new moves never mix.
+- PHP came from MacPorts, since Homebrew no longer builds it for macOS 14.
+- Checked in two separate headless Chrome windows: a game with Green first, a click out of turn ignored, moves arriving within a second, a reload, an illegal move sent straight to the server (the other page stopped the game), a wrong secret and a missing game. `--lan` answered on the laptop's network address. Two real computers are left for Taras.
