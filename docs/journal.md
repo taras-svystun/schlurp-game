@@ -183,3 +183,15 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `[tool.setuptools.packages.find]` with `include = ["schlurp*"]`. A wheel built with an extra empty folder in `schlurp/` had it inside.
 - When an agent raises, the status says "Blue (Name) crashed.", the message shows the error in at most 3 lines, and the full traceback goes to the terminal. Nobody moves until Undo, New or Menu. A broken hint agent only shows a message. Screenshots checked that a long error stays above the buttons.
 - Taras chose the web priorities: online play between two people first, then `Deepening:mix`, then hints; an MVP with game links and no accounts; English first. Accounts, French and tournaments on the site went to "Later".
+
+## Web version: where the engine runs (2026-10-20)
+
+**What:** `docs/adr/0005` decides how the web version works, and `docs/PLAN.md` splits it into steps W1–W7.
+
+**Why:** Pascal answered our hosting questions: his server runs Apache, PHP and MariaDB, but no Python, on HTTP for now. So a Python server was out.
+
+**How:**
+- Our engine and agents will run in the browser with Pyodide, and a small PHP program will only pass moves between the two browsers, which ask it once a second. It checks whose turn it is; each browser checks the rules.
+- Before deciding, we ran perft and `Deepening:mix` in Pyodide 314.0.7 under Node: 1.7 times slower than CPython 3.11, with the same moves, and 1.1 s to start. That was fast enough not to write the engine again in JavaScript.
+- The glossary got **game link** and **game server**.
+

@@ -128,3 +128,13 @@ _Avoid_: Log, replay, history, save file
 **Random opening**:
 The first few moves of a tournament game, chosen at random so that games between the same agents are not all identical. Each random opening is played twice, with the agents swapping players.
 _Avoid_: Warm-up, seed moves
+
+### The web version
+
+**Game link**:
+The web address of one online game, sent by the player who made it to the other player. Each of the two links holds a secret for one player, so only that player can move for them.
+_Avoid_: Invite, room, URL, code
+
+**Game server**:
+The small PHP program on Pascal's site that stores the moves of online games and passes them from one browser to the other. It does not know the rules; each browser checks them with our engine.
+_Avoid_: Backend, API, relay, lobby

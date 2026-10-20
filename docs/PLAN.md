@@ -77,28 +77,28 @@ Pascal Peyremorte, who wrote the Delphi Schlurp, is Taras's friend and offers to
 What we agreed:
 - An MVP first: no accounts. One player starts a game and sends a link; whoever opens it plays the other side.
 - The interface is in English.
-- The page talks to the game in small messages ("move a1c3" in, "the new position" out). The page then does not care where the engine runs: on a Python server, or in the browser. So the page can be built before we know what Pascal's hosting can run.
-- Waiting for Pascal. Taras sent him these questions on 2026-10-20 (in French). When the answers come, an ADR records where the engine runs, and W1–W5 get split further.
-  1. Can his server run a Python 3.11+ program all the time, reachable from outside, with WebSockets? If not, what can it run: only static files, or PHP (with which database)? *This picks the architecture.*
-  2. Can we get SSH or SFTP access to deploy, or does he install each new version himself? *This decides how often we can ship.*
-  3. At what address (a subdomain or a page of his site), and is the site on HTTPS? *Invite links need a fixed address, and a page on HTTPS can only use secure WebSockets.*
-  4. Optional: who starts in the original 7th Guest, the player or Stauf? His site says "Stauf does not enable you to start". *Only the menu's default.*
-  5. Optional: is our fifty-move rule (100 jumps in a row end in a draw) fine with him? *It is his game; we keep the rule either way.*
-- W1 and W2 do not depend on the answers, so they can start before.
+- The page talks to the game in small messages ("move a1c3" in, "the new position" out). The page then does not care where the engine runs.
+- Taras sent Pascal 5 questions about his hosting on 2026-10-20, and Pascal answered the same day:
+  1. His server is Apache 2.4 with PHP and MariaDB. No Python, so it stays easy to move to any cheap host. HTTP for now, HTTPS later. His NAS, for tests at home, is the same.
+  2. He uploads by FTP; SSH is possible.
+  3. We can use any subdomain of peyremorte.fr.
+  4. In the 7th Guest, Stauf starts, as his site says; it does not matter to him. So it only changes the menu's default.
+  5. The fifty-move rule is fine; in practice it never happened.
+- So the engine and agents run in the browser with Pyodide, and a small PHP server passes the moves (see `adr/0005`). Pyodide was 1.7 times slower than CPython and chose the same moves.
 
 What we know so far:
-- Our engine and agents never import Pygame, so they can run behind any front end. The Pygame drawing does not carry over: the board is drawn again for the browser.
-- Online play needs something in the middle that passes the moves on. The main choice is where the game and the agents run:
-  - **a Python server** (for example FastAPI with WebSockets) running our engine and agents, with a thin page in the browser. Reuses all our code, and the server checks every move; needs hosting that can run Python all the time, and the agents use the server's CPU;
-  - **in the browser**: our Python with Pyodide (reuses the code, slower start and slower agents, which with a time limit only means less deep), or the engine written again in JavaScript or TypeScript (fast, but the rules exist twice). Then a small server still passes the moves between two players; for a turn-based game, PHP asking every second is enough.
+- Our engine and agents never import Pygame, so they run in Pyodide unchanged. The Pygame drawing does not carry over: the board is drawn again for the browser, in SVG.
 - Game records are already JSON with moves in standard notation, so they work on a web page as they are.
+- Taras's laptop has no PHP yet: W2 installs it with `brew install php`. GitHub's Ubuntu machines have it.
 
-Steps (to be split further once Pascal answers):
-- [ ] W1. The messages between the page and the game, and a server with game links, running on Taras's laptop: two people on the same Wi-Fi can play.
-- [ ] W2. The page: the board in the microscope look, clicks, animations, the side panel.
-- [ ] W3. Put it online on Pascal's site.
-- [ ] W4. Play against `Deepening:mix` online.
-- [ ] W5. Hints online.
+Steps:
+- [ ] W1. The game in the browser. A script copies our Python files into `web/`; a Web Worker loads Pyodide and answers the page's messages (new game, legal moves, play a move). A plain board to click, for two people on one computer. Check: a pytest test sends the worker's messages through Node and compares the answers with the engine; we time how long the page takes to load.
+- [ ] W2. The game server in PHP: make a game with two links, take a move, give the moves after number n. SQLite on the laptop. Check: pytest starts `php -S` and tries every request, including a wrong secret, the wrong player and an old move number. CI installs PHP.
+- [ ] W3. Online play on Taras's laptop: one player makes a game and sends the link, the other opens it and plays. Each browser checks every move it gets. Reloading the page keeps your place in the game. Check: two browsers, then two computers on the same Wi-Fi.
+- [ ] W4. The page in the microscope look: the round lens, the microbes, clone, jump and infect animations, the side panel with pawns, turn and moves. Check: screenshots at laptop and phone width.
+- [ ] W5. Online on Pascal's site: a deploy script, a config file on the server for MariaDB, a test with Pascal before telling anyone. Check: a full game between Taras and Pascal on the real address.
+- [ ] W6. Play against `Deepening:mix`: the agent thinks in its own worker, Undo and New stop it, the menu picks your colour and who starts. Check: a game against it in Chrome, Firefox and Safari, and the depth it reaches in 0.5 s.
+- [ ] W7. Hints online, from `Deepening:mix`. Check: a hint in a game between two people and in a game against the AI.
 
 ## Later
 
