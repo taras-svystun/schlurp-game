@@ -78,7 +78,13 @@ What we agreed:
 - An MVP first: no accounts. One player starts a game and sends a link; whoever opens it plays the other side.
 - The interface is in English.
 - The page talks to the game in small messages ("move a1c3" in, "the new position" out). The page then does not care where the engine runs: on a Python server, or in the browser. So the page can be built before we know what Pascal's hosting can run.
-- Waiting for Pascal: what his hosting can run, how we deploy to it, and at what address. Then an ADR records where the engine runs.
+- Waiting for Pascal. Taras sent him these questions on 2026-10-20 (in French). When the answers come, an ADR records where the engine runs, and W1–W5 get split further.
+  1. Can his server run a Python 3.11+ program all the time, reachable from outside, with WebSockets? If not, what can it run: only static files, or PHP (with which database)? *This picks the architecture.*
+  2. Can we get SSH or SFTP access to deploy, or does he install each new version himself? *This decides how often we can ship.*
+  3. At what address (a subdomain or a page of his site), and is the site on HTTPS? *Invite links need a fixed address, and a page on HTTPS can only use secure WebSockets.*
+  4. Optional: who starts in the original 7th Guest, the player or Stauf? His site says "Stauf does not enable you to start". *Only the menu's default.*
+  5. Optional: is our fifty-move rule (100 jumps in a row end in a draw) fine with him? *It is his game; we keep the rule either way.*
+- W1 and W2 do not depend on the answers, so they can start before.
 
 What we know so far:
 - Our engine and agents never import Pygame, so they can run behind any front end. The Pygame drawing does not carry over: the board is drawn again for the browser.
