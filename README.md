@@ -47,11 +47,12 @@ Two AI agents play each other in a window, and you see what each one thinks befo
 .venv/bin/schlurp watch Greedy Greedy --first green     # Green moves first
 .venv/bin/schlurp watch AlphaBeta Greedy                 # AlphaBeta looks 3 moves ahead
 .venv/bin/schlurp watch AlphaBeta:2 AlphaBeta            # depth 2 against depth 3
+.venv/bin/schlurp watch AlphaBeta:mix AlphaBeta          # the mix heuristic against plain pawns
 ```
 
 The first agent plays Blue, the second Green. You can also pick an AI agent for both players in the start menu (`.venv/bin/schlurp play`).
 
-- **Move scores** (on the board): each cell a move can land on shows the best score of those moves, from the point of view of the player to move. The chosen move is yellow; for a jump a line shows which pawn jumps. Greedy's score is the pawn difference after the move; AlphaBeta's is the pawn difference it expects after looking ahead, or ±100 and more for a won or lost game. Random gives no scores.
+- **Move scores** (on the board): each cell a move can land on shows the best score of those moves, from the point of view of the player to move. The chosen move is yellow; for a jump a line shows which pawn jumps. Greedy's score is the pawn difference after the move; AlphaBeta's is the pawn difference it expects after looking ahead, or ±1000 and more for a won or lost game. Random gives no scores.
 - **Expected line**: the moves the agent expects next, starting with its own.
 - **Work done**: how many positions it looked at, how many moves ahead, and how long it took.
 
@@ -108,7 +109,8 @@ Each agent is explained in its own file in [docs/agents](docs/agents):
 
 - **Random** ([random.md](docs/agents/random.md)): plays any legal move. The baseline every other agent must beat.
 - **Greedy** ([greedy.md](docs/agents/greedy.md)): looks one move ahead and plays the move with the best pawn difference. Wins 499 games of 500 against Random.
-- **AlphaBeta** ([alphabeta.md](docs/agents/alphabeta.md)): looks 3 moves ahead (my move, the answer, my next move), expects the opponent's best answer, and skips the lines that cannot change its choice. It gives the hints in Play. Set the depth after a colon: `AlphaBeta:2` is faster, `AlphaBeta:4` takes seconds per move. `AlphaBeta:3:pawns` names the heuristic too (`pawns` is the only one so far).
+- **AlphaBeta** ([alphabeta.md](docs/agents/alphabeta.md)): looks 3 moves ahead (my move, the answer, my next move), expects the opponent's best answer, and skips the lines that cannot change its choice. It gives the hints in Play. Set the depth after a colon: `AlphaBeta:2` is faster, `AlphaBeta:4` takes seconds per move. Name a heuristic too: `AlphaBeta:mix` is stronger at the same depth but takes about 0.7 s per move.
+- **Heuristics** ([heuristics.md](docs/agents/heuristics.md)): what AlphaBeta guesses where its look-ahead stops. `pawns` (the default), `safe`, `holes`, `exposed`, `mobility`, and `mix` (safe pawns and holes, the best we found). You can try your own weights in the agent name: `AlphaBeta:2:safe=0.5:holes=-1` is `mix` at depth 2.
 
 Compare any two of them:
 
@@ -117,6 +119,8 @@ Compare any two of them:
 .venv/bin/schlurp tournament Greedy Greedy
 .venv/bin/schlurp tournament AlphaBeta:2 Greedy
 .venv/bin/schlurp tournament AlphaBeta Greedy --openings 100     # about 2 minutes: depth 3 takes 0.15 s per move
+.venv/bin/schlurp tournament AlphaBeta:2:mix AlphaBeta:2 --openings 100     # about 4 minutes
+.venv/bin/schlurp tournament AlphaBeta:2:safe=1:holes=-0.5 AlphaBeta:2:mix --openings 50     # try your own weights
 ```
 
 ## Run the tests
@@ -142,7 +146,7 @@ Only the window tests (no real window opens):
 Only the agents' tests:
 
 ```sh
-.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py tests/test_alphabeta_agent.py
+.venv/bin/pytest tests/test_agents.py tests/test_random_agent.py tests/test_greedy_agent.py tests/test_alphabeta_agent.py tests/test_heuristics.py
 ```
 
 Only the tournament and game record tests:

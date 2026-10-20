@@ -1,9 +1,11 @@
 """Agents: anything that chooses a move in a position. No Pygame here."""
 
+import math
+
 from schlurp.agents.alphabeta_agent import AlphaBetaAgent
 from schlurp.agents.base import Agent, Thoughts
 from schlurp.agents.greedy_agent import GreedyAgent
-from schlurp.agents.heuristics import HEURISTICS
+from schlurp.agents.heuristics import FEATURES, HEURISTICS, weighted
 from schlurp.agents.random_agent import RandomAgent
 
 # Every AI agent, by its name in the start menu, Watch and Tournament.
@@ -13,13 +15,15 @@ AGENTS: dict[str, type[Agent]] = {
     "AlphaBeta": AlphaBetaAgent,
 }
 # What each agent can set after colons in its name, in any order: "AlphaBeta:2", "AlphaBeta:3:pawns".
-# A whole number is the depth; a name is a heuristic. Random and Greedy have nothing to set.
+# A whole number is the depth; a name is a heuristic. A feature with a weight, like "mobility=0.1",
+# builds a heuristic on the spot: `pawns` plus each feature times its weight ("AlphaBeta:2:mobility=0.1:holes=-1").
+# Random and Greedy have nothing to set.
 OPTIONS: dict[str, tuple[str, ...]] = {
     "AlphaBeta": ("depth", "heuristic"),
 }
 OPTION_TEXT = {
     "depth": "a depth (a whole number from 1 up)",
-    "heuristic": f"a heuristic ({', '.join(HEURISTICS)})",
+    "heuristic": f"a heuristic ({', '.join(HEURISTICS)}) or features with weights ({', '.join(f'{n}=0.5' for n in FEATURES)})",
 }
 
 
@@ -34,8 +38,14 @@ def make_agent(name: str, seed: int | None = None) -> Agent:
     allowed = OPTIONS.get(base, ())
     if options and not allowed:
         raise ValueError(f"{base} has nothing to set after a colon. Only these do: {', '.join(OPTIONS)}")
-    settings = {}
+    settings, weights = {}, {}
     for option in options:
+        if feature_weight(option):
+            feature, weight = feature_weight(option)
+            if feature in weights:
+                raise ValueError(f"{name!r} gives {option.partition('=')[0]} two weights")
+            weights[feature] = weight
+            continue
         if option.isdigit() and int(option) >= 1:
             key, value = "depth", int(option)
         elif option in HEURISTICS:
@@ -47,10 +57,28 @@ def make_agent(name: str, seed: int | None = None) -> Agent:
         if key in settings:
             raise ValueError(f"{name!r} sets the {key} twice")
         settings[key] = value
+    if weights:
+        if "heuristic" not in allowed:
+            raise ValueError(f"{base} has no heuristic to give weights to")
+        if "heuristic" in settings:
+            raise ValueError(f"{name!r} names a heuristic and also gives weights: use one or the other")
+        settings["heuristic"] = weighted(weights)
     agent = AGENTS[base](seed=seed, **settings)
     # Shown in the window and written in game records, so "AlphaBeta:2" is not mistaken for the default depth.
     agent.name = name
     return agent
+
+
+def feature_weight(option: str):
+    """The feature and weight in an option like "mobility=0.1", or None if the option is not one."""
+    feature, equals, weight = option.partition("=")
+    if not equals or feature not in FEATURES:
+        return None
+    try:
+        value = float(weight)
+    except ValueError:
+        return None
+    return (FEATURES[feature], value) if math.isfinite(value) else None
 
 
 __all__ = ["AGENTS", "HEURISTICS", "OPTIONS", "Agent", "AlphaBetaAgent", "GreedyAgent", "RandomAgent", "Thoughts", "make_agent"]

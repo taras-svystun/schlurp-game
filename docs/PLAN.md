@@ -59,7 +59,7 @@ Words in **bold** are defined in `../CONTEXT.md`.
 - [x] 5. Greedy agent and the Hint button, then a tournament.
 - [x] 6. Watch with the thoughts panel.
 - [x] 7. AlphaBeta with the `pawns` heuristic, then a tournament.
-- [ ] 8. Better heuristics: mobility, safe pawns, exposed cells, holes; then tournaments to choose the weights.
+- [x] 8. Better heuristics: mobility, safe pawns, exposed cells, holes; then tournaments to choose the weights.
 - [ ] 9. Deepening: move ordering, iterative deepening and a time limit.
 - [ ] 10. MCTS.
 

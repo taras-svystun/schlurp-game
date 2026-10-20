@@ -132,3 +132,16 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `make_agent` takes options after colons: `AlphaBeta:2`, `AlphaBeta:3:pawns`.
 - Depth 3 by default: 0.15 s per move on average, 0.4 s at worst. Depth 4 takes 3 s on average and waits for move ordering in step 9.
 - Tournaments (depth 3 kept to 200 games, so each one stayed under 10 minutes): AlphaBeta:2 beats Greedy 92.4% ± 2.3%, AlphaBeta:3 beats Greedy 94.0% ± 3.3%, and AlphaBeta:3 beats AlphaBeta:2 89.5% ± 4.3%. Against a weak agent two strong ones look alike; head to head the extra depth shows.
+
+## Step 8: better heuristics (2026-10-20)
+
+**What:** Four features for AlphaBeta's heuristic (mobility, safe pawns, exposed cells, holes), weights chosen by tournaments, and the `mix` heuristic: pawns, plus half a pawn per safe pawn, minus a pawn per hole. `docs/agents/heuristics.md` explains them.
+
+**Why:** `pawns` sees how many pawns each player has but not how they stand. A packed group and a group full of holes count the same, though the opponent can jump into the holes next move.
+
+**How:**
+- Each feature is "mine minus the opponent's", and `weighted` adds features times weights to `pawns`, as in Awalé. Agent names can carry weights (`AlphaBeta:2:safe=0.5:holes=-1`), so tournaments, whose worker processes build agents from names, can try any mix, and so can Taras.
+- Mobility can pass 100 moves, so a guess could have looked better than a won game (100). `WIN` is now 1000 and lives in `heuristics.py`; `weighted` refuses weights that could reach it, and a test checks every named heuristic.
+- Three stages of tournaments at depth 2, each tournament under 10 minutes: each feature alone against `pawns`, then mixes against the best single feature (`safe=0.5`), then the winner again with a new seed, because trying many weights finds some winners by luck. Safe pawns helped most (79%), holes helped only with a negative weight (70%, and 21.5% with a positive one), exposed cells a little, mobility not at all while being the slowest.
+- `mix` beats `pawns` 71.8% ± 6.1% at depth 2 and 73.3% ± 11.3% at depth 3, but loses 78% of games to `pawns` one move deeper: depth is worth more than a better guess. AlphaBeta keeps `pawns` by default, which stays fast for hints; `AlphaBeta:mix` is there to choose.
+- In all, the step's tournaments ran for about 45 minutes, in short runs. Stage 2 took 17 minutes instead of the 10 estimated, because the mixes think slower than measured alone.

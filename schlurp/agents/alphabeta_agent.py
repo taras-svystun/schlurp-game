@@ -4,12 +4,10 @@ that cannot change its choice."""
 import math
 
 from schlurp.agents.base import Agent, Thoughts
-from schlurp.agents.heuristics import Heuristic, pawns
+from schlurp.agents.heuristics import WIN, Heuristic, pawns
 from schlurp.engine import Move, Player, Position
 
 DEPTH = 3
-# A won game is worth more than any heuristic score: `pawns` is at most 49.
-WIN = 100
 INFINITY = math.inf
 
 

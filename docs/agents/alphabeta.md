@@ -10,14 +10,14 @@ Greedy looks one move ahead and never asks "and then what does the opponent do?"
 
 Picture every line of play as a tree. The position now is the root; each legal move is a branch to a new position; each answer is a branch from there. At depth 3 the tree has my moves, then every answer to each of them, then every move of mine after each answer.
 
-At the bottom, where the search stops, we cannot know who will win, so we guess with a **heuristic**. Ours is `pawns`: my pawns minus the opponent's. Then we go back up the tree:
+At the bottom, where the search stops, we cannot know who will win, so we guess with a **heuristic**. By default it is `pawns`: my pawns minus the opponent's. Step 8 added better ones, see [heuristics.md](heuristics.md). Then we go back up the tree:
 
 - in a position where **I** am to move, its value is the value of my **best** move: I choose;
 - in a position where the **opponent** is to move, its value is the value of their best move, which is the **worst** for me: they choose, and I expect them to choose well.
 
 The best and the worst, maximum and minimum, give the method its name: **Minimax**. A move's score is "how many pawns I will be ahead after `depth` moves if both of us play well".
 
-A position where the game ends needs no guess: a win is worth `WIN = 100` plus the depth left, a loss `-100` minus the depth left, a draw 0. 100 is more than any pawn difference (at most 49), so a won game always beats being ahead. The depth left makes a quick win better than a slow one: a win found after 1 move keeps 2 moves of depth and scores 102, after 3 moves it scores 100.
+A position where the game ends needs no guess: a win is worth `WIN = 1000` plus the depth left, a loss `-1000` minus the depth left, a draw 0. 1000 is more than any heuristic can give (a pawn difference is at most 49; step 8 added features that can reach a few hundred), so a won game always beats being ahead. The depth left makes a quick win better than a slow one: a win found after 1 move keeps 2 moves of depth and scores 1002, after 3 moves it scores 1000. (In step 7 `WIN` was 100; step 8 raised it.)
 
 A pass needs nothing special. After a pass the same player moves again, so the search asks `position.to_move is me` at each position instead of assuming that players take turns.
 
@@ -130,7 +130,7 @@ B . . . . . .
 . . . . . . .
 ```
 
-Greedy jumped `g5e3` to infect e2, which scores −1 at depth 1, as good as any move. At depth 2 AlphaBeta sees Blue's answer `c4d2`, which infects both of Green's pawns and ends the game: `g5e3` scores −100, a loss. It plays `f6` instead (−4: behind, but alive).
+Greedy jumped `g5e3` to infect e2, which scores −1 at depth 1, as good as any move. At depth 2 AlphaBeta sees Blue's answer `c4d2`, which infects both of Green's pawns and ends the game: `g5e3` scores −1000, a loss. It plays `f6` instead (−4: behind, but alive).
 
 ## How much pruning saves
 
