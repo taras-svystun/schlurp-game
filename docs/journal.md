@@ -234,3 +234,9 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `web_game.py` learned moves with a player, and a new game with moves already played. Online steps run one at a time, so a move and a check for new moves never mix.
 - PHP came from MacPorts, since Homebrew no longer builds it for macOS 14.
 - Checked in two separate headless Chrome windows: a game with Green first, a click out of turn ignored, moves arriving within a second, a reload, an illegal move sent straight to the server (the other page stopped the game), a wrong secret and a missing game. `--lan` answered on the laptop's network address. Two real computers are left for Taras.
+
+## Fix: a clear message when Node does not run (2026-10-20)
+
+**What:** The Pyodide test first checks that `node` runs, and on a failure shows Node's own error.
+
+**Why:** On Taras's laptop the test failed with no clear reason. The failed `brew install php` of step W2 had upgraded icu4c from 73 to 78, which broke Homebrew's old Node 21. Where `/opt/homebrew/bin` came first in the PATH, the test ran that Node instead of nvm's Node 22.

@@ -202,12 +202,15 @@ def test_pyodide_gives_the_same_answers_as_python(tmp_path):
         if os.environ.get("CI"):
             pytest.fail("Node and Pyodide must be installed on CI: run npm ci")
         pytest.skip("needs Node and Pyodide: run npm ci")
+    version = subprocess.run(["node", "--version"], capture_output=True, text=True)
+    assert version.returncode == 0, f"{shutil.which('node')} does not run:\n{version.stderr[-500:]}"
     games = [random_messages(seed) for seed in range(20)]
     zip_path = web_build.build(tmp_path / "schlurp.zip")
     node = subprocess.run(
         ["node", str(PROJECT / "tests" / "pyodide_game.mjs"), str(zip_path)],
-        input=json.dumps(games), capture_output=True, text=True, check=True, timeout=120,
+        input=json.dumps(games), capture_output=True, text=True, timeout=120,
     )
+    assert node.returncode == 0, f"Pyodide in Node failed:\n{node.stderr[-1500:]}"
     in_pyodide = json.loads(node.stdout)
     for messages, answers in zip(games, in_pyodide):
         web = WebGame()
