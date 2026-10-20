@@ -1,5 +1,7 @@
 """The rules, one at a time, on small positions worked out by hand."""
 
+import random
+
 import pytest
 
 from schlurp.engine import JUMPS_FOR_DRAW, Move, Player, Position, cell_index, cell_name
@@ -268,3 +270,13 @@ def test_positions_never_change():
     assert start == Position.start()
     with pytest.raises(AttributeError):
         start.to_move = GREEN
+
+
+def test_play_legal_gives_the_same_position_as_play():
+    # The search skips the check in `play`, so the two must agree on every legal move.
+    rng = random.Random(4)
+    position = Position.start()
+    while not position.ends_game():
+        for move in position.legal_moves():
+            assert position.play_legal(move) == position.play(move)
+        position = position.play(rng.choice(position.legal_moves()))

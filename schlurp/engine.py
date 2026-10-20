@@ -31,6 +31,11 @@ class Player(Enum):
         return self.name[0]
 
 
+# The numbers Blue's and Green's pawns have in `Position.cells`. Kept here because reading `Player.BLUE.value`
+# is slow in Python (it is a property), and `ends_game` runs for every position a search looks at.
+BLUE_CELL, GREEN_CELL = Player.BLUE.value, Player.GREEN.value
+
+
 def cell_name(cell: int) -> str:
     """0 is "a1", 48 is "g7"."""
     row, column = divmod(cell, SIZE)
@@ -166,8 +171,8 @@ class Position:
         cells = self.cells
         return (
             EMPTY not in cells
-            or Player.BLUE.value not in cells
-            or Player.GREEN.value not in cells
+            or BLUE_CELL not in cells
+            or GREEN_CELL not in cells
             or self.jumps_in_a_row >= JUMPS_FOR_DRAW
         )
 
@@ -215,16 +220,27 @@ class Position:
         """Return the position after the player to move makes `move`, with the infections and a pass if needed."""
         if not self.is_legal(move):
             raise ValueError(f"{self.to_move.name.title()} cannot play {move}\n{self}")
-        me, enemy = self.to_move.value, self.to_move.opponent.value
+        return self.play_legal(move)
+
+    def play_legal(self, move: Move) -> "Position":
+        """`play` without checking the move first: only for a move from `legal_moves()`.
+
+        A search tries hundreds of thousands of moves, all from `legal_moves()`, and checking each one again
+        took a fifth of its time. Anything else, like a move a person or an agent chose, goes through `play`.
+        """
+        mover = self.to_move
+        opponent = mover.opponent
+        me, enemy = mover.value, opponent.value
+        target, source = move
         cells = list(self.cells)
-        cells[move.target] = me
-        if move.source is not None:
-            cells[move.source] = EMPTY
-        for neighbour in NEIGHBOURS[move.target]:
+        cells[target] = me
+        if source is not None:
+            cells[source] = EMPTY
+        for neighbour in NEIGHBOURS[target]:
             if cells[neighbour] == enemy:
                 cells[neighbour] = me  # infected
-        jumps = self.jumps_in_a_row + 1 if move.source is not None else 0
-        return Position(tuple(cells), self.to_move.opponent, jumps)._with_pass()
+        jumps = self.jumps_in_a_row + 1 if source is not None else 0
+        return Position(tuple(cells), opponent, jumps)._with_pass()
 
     def can_move(self, player: Player) -> bool:
         """True if `player` has a pawn with an empty cell at most 2 cells away."""

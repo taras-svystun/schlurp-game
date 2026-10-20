@@ -44,7 +44,7 @@ class AlphaBetaAgent(Agent):
             results = {}
             for move in moves:
                 self.positions += 1
-                results[move] = self.alphabeta(position.play(move), self.depth - 1, me, -INFINITY, INFINITY)
+                results[move] = self.alphabeta(position.play_legal(move), self.depth - 1, me, -INFINITY, INFINITY)
         except SearchStopped:
             return Thoughts(moves[0], positions=self.positions)  # nobody will play it
         scores = {move: value for move, (value, _) in results.items()}
@@ -75,7 +75,7 @@ class AlphaBetaAgent(Agent):
         best, best_line = (-INFINITY if our_turn else INFINITY), ()
         for move in position.legal_moves():
             self.positions += 1
-            value, line = self.alphabeta(position.play(move), depth - 1, me, alpha, beta)
+            value, line = self.alphabeta(position.play_legal(move), depth - 1, me, alpha, beta)
             if our_turn:
                 if value > best:
                     best, best_line = value, (move, *line)

@@ -14,7 +14,7 @@ class GreedyAgent(Agent):
         scores = {}
         for move in position.legal_moves():
             # Try the move and count. The engine applies the infections, so we only look at the result.
-            after = position.play(move)
+            after = position.play_legal(move)
             scores[move] = after.pawns(me) - after.pawns(enemy)
         best = max(scores.values())
         # Several moves often give the same difference (all clones that infect nobody, say).
