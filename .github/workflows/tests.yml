@@ -21,5 +21,10 @@ jobs:
         with:
           node-version: "22"
       - run: npm ci
+      # The oldest PHP we support, since we do not know yet which one Pascal's server runs. The laptop has a new one.
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "7.4"
+          extensions: pdo_sqlite
       - run: pip install -e ".[dev]"
       - run: pytest

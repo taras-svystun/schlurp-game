@@ -89,11 +89,11 @@ What we agreed:
 What we know so far:
 - Our engine and agents never import Pygame, so they run in Pyodide unchanged. The Pygame drawing does not carry over: the board is drawn again for the browser, in SVG.
 - Game records are already JSON with moves in standard notation, so they work on a web page as they are.
-- Taras's laptop has no PHP yet: W2 installs it with `brew install php`. GitHub's Ubuntu machines have it.
+- Homebrew no longer builds PHP for macOS 14, so the laptop has no PHP yet; W2 was checked on GitHub, on PHP 7.4.
 
 Steps:
 - [x] W1. The game in the browser. A script copies our Python files into `web/`; a Web Worker loads Pyodide and answers the page's messages (new game, legal moves, play a move). A plain board to click, for two people on one computer. Check: a pytest test sends the worker's messages through Node and compares the answers with the engine; we time how long the page takes to load.
-- [ ] W2. The game server in PHP: make a game with two links, take a move, give the moves after number n. SQLite on the laptop. Check: pytest starts `php -S` and tries every request, including a wrong secret, the wrong player and an old move number. CI installs PHP.
+- [x] W2. The game server in PHP: make a game with two secrets, take a move, give the moves after number n, each with the player who sent it. SQLite on the laptop. Check: pytest starts `php -S` and tries every request, including a wrong secret, an old or skipped move number and two moves sent at once. CI runs it on PHP 7.4.
 - [ ] W3. Online play on Taras's laptop: one player makes a game and sends the link, the other opens it and plays. Each browser checks every move it gets. Reloading the page keeps your place in the game. Check: two browsers, then two computers on the same Wi-Fi.
 - [ ] W4. The page in the microscope look: the round lens, the microbes, clone, jump and infect animations, the side panel with pawns, turn and moves. Check: screenshots at laptop and phone width.
 - [ ] W5. Online on Pascal's site: a deploy script, a config file on the server for MariaDB, a test with Pascal before telling anyone. Check: a full game between Taras and Pascal on the real address.

@@ -5,3 +5,4 @@ __pycache__/
 records/
 node_modules/
 web/build/
+web/config.php

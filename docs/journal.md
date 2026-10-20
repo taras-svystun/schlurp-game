@@ -208,3 +208,16 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - `web/page.js` draws the board in SVG and clicks work like in the Play window. It knows no rules: everything it draws comes from the worker.
 - A test plays 20 random games, with illegal moves and undos, through Pyodide in Node and in our Python, and the answers are the same. Node and `npm ci` joined the CI.
 - In headless Chrome with an empty cache the first position showed after 1.8 s. Picking, cloning, jumping, Undo, a new game with Green first, and the phone width (390 px, no sideways scroll) all worked.
+
+## Step W2: the game server (2026-10-20)
+
+**What:** `web/api.php`, a small PHP program that makes online games and passes their moves between two browsers. Three requests: `create` a game with a secret for each player, `move` with a secret and the move number, and `game` for the moves after number n. The page does not use it yet; that is W3.
+
+**Why:** Pascal's server runs PHP and MariaDB, not Python (see ADR 0005), and two browsers need something in the middle to pass moves on.
+
+**How:**
+- The server does not know the rules, so it cannot check whose turn it is: after a pass the same player moves again. It checks the secret and that the move number is the next one, and records which player sent each move; the browsers check the rest. ADR 0005 says so now.
+- The primary key on (game, move number) means two moves sent at the same moment can never both be stored. A test sends 8 at once and exactly one is kept.
+- The same plain SQL works in MariaDB and SQLite. Without a `config.php` (never in git) it uses `records/web-games.sqlite`. Games nobody moved in for 30 days are deleted.
+- Written for PHP 7.4 and newer, since we do not know Pascal's version yet. GitHub runs the tests on 7.4.
+- `brew install php` failed: Homebrew no longer builds PHP for macOS 14, and building it from source broke. The tests skip on the laptop and run on GitHub, where they passed.

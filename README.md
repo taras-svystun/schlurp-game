@@ -24,6 +24,14 @@ npm ci
 
 It installs Pyodide into `node_modules/`, so the tests can run our Python the way the browser does. Without it that one test is skipped.
 
+The game server's tests need PHP 7.4 or newer. On a Mac:
+
+```sh
+brew install php
+```
+
+Without PHP those tests are skipped.
+
 ## Play
 
 ```sh
@@ -152,6 +160,29 @@ Then open http://localhost:8000. Another port: `.venv/bin/schlurp web --port 808
 - Click a pawn, then a cell: a solid ring is a clone, a dashed ring a jump. Or click an empty cell next to your pawns to clone there. Undo takes back one move. New game starts again, with the player picked in "First".
 - `schlurp web` first packs the Python files the page needs into `web/build/schlurp.zip`, so a change in the engine shows after a restart and a reload of the page.
 
+### The game server
+
+`web/api.php` stores the moves of online games and passes them between the two browsers. It is not used by the page yet (that is step W3), but you can run it and talk to it by hand:
+
+```sh
+php -S localhost:8001 -t web
+```
+
+In another terminal:
+
+```sh
+curl -X POST 'http://localhost:8001/api.php?action=create' -d '{"first": "blue"}'
+```
+
+The answer has a game id and a secret for each player. Then, with your own id and Blue's secret:
+
+```sh
+curl -X POST 'http://localhost:8001/api.php?action=move' -d '{"game": "ID", "secret": "BLUE_SECRET", "number": 0, "move": "b6"}'
+curl 'http://localhost:8001/api.php?action=game&game=ID'
+```
+
+Every request is explained at the top of `web/api.php`. The games are kept in `records/web-games.sqlite`. On a real server, a `web/config.php` (copied from `web/config.example.php`, never put in git) points it to MariaDB instead.
+
 ## Run the tests
 
 ```sh
@@ -189,7 +220,7 @@ Only the tournament and game record tests:
 Only the web version's tests (one of them runs Pyodide in Node, see [First-time setup](#first-time-setup)):
 
 ```sh
-.venv/bin/pytest tests/test_web.py
+.venv/bin/pytest tests/test_web.py tests/test_game_server.py
 ```
 
 Only the tests against the reference:
