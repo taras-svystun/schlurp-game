@@ -103,6 +103,7 @@ Steps:
 ## Later
 
 - **Accounts, for the web version.** A player keeps one name across visits, sees their past games, and sees who is online to start a game with them, instead of sending a link. A rating could come after that.
+- **Undo in an online game between two people.** Not in the MVP: it needs the other player to agree, so one asks and the other accepts or refuses.
 - **A French interface, for the web version.** Pascal will likely share the game with French friends.
 - **Tournaments on the website.** Unlikely: 500 games take minutes of CPU, on the server or in a visitor's browser. Tournaments stay in the terminal.
 - Outside Ataxx engines (over the UAI protocol, which the `ataxx` package speaks) as stronger opponents.
