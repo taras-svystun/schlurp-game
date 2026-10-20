@@ -5,7 +5,8 @@ It has a checkbox for each part:
   and the chosen move is yellow, with a line from the pawn for a jump; "≤" marks a score that is only an
   upper bound (Deepening proves only that such a move is worse than its best one);
 - the expected line of play, in move names like "d4 a1c2";
-- the work done: positions looked at, how deep, and how long it took.
+  MCTS's scores are its share of wins in random games, from 0.00 to 1.00;
+- the work done: random games played to the end (MCTS), positions looked at, how deep, and how long it took.
 """
 
 import time
@@ -22,9 +23,14 @@ from schlurp.ui.widgets import Checkbox
 BADGE_WIDTH, BADGE_HEIGHT = 44, 22
 
 
-def score_text(score: float, upper_bound: bool = False) -> str:
-    """+3, -2 and 0 for whole numbers (like pawns), 0.25 for the rest. An upper bound gets a "≤" in front."""
-    if float(score).is_integer():
+def score_text(score: float, upper_bound: bool = False, share: bool = False) -> str:
+    """+3, -2 and 0 for whole numbers (like pawns), 0.25 for the rest. An upper bound gets a "≤" in front.
+
+    A `share` of wins (from MCTS) always has 2 decimals, from 0.00 to 1.00.
+    """
+    if share:
+        text = f"{score:.2f}"
+    elif float(score).is_integer():
         text = f"{score:+.0f}" if score else "0"
     else:
         text = f"{score:.2f}"
@@ -47,7 +53,8 @@ def scores_by_cell(thoughts: Thoughts) -> dict[int, tuple[float, bool]]:
 def work_text(thoughts: Thoughts, seconds: float) -> str:
     if not thoughts.positions:
         return f"no search, {duration(seconds)}"
-    return f"{thoughts.positions:,} positions, depth {thoughts.depth}, {duration(seconds)}"
+    playouts = f"{thoughts.playouts:,} playouts, " if thoughts.playouts else ""
+    return f"{playouts}{thoughts.positions:,} positions, depth {thoughts.depth}, {duration(seconds)}"
 
 
 class ThoughtsPanel:
@@ -113,7 +120,8 @@ class ThoughtsPanel:
             pygame.draw.rect(surface, HIGHLIGHT if is_chosen else METAL[3], badge, border_radius=BADGE_HEIGHT // 2)
             if not is_chosen:
                 pygame.draw.rect(surface, METAL[1], badge, width=1, border_radius=BADGE_HEIGHT // 2)
-            image = self.font.render(score_text(score, upper_bound), True, BACKGROUND if is_chosen else TEXT)
+            text = score_text(score, upper_bound, share=thoughts.playouts > 0)
+            image = self.font.render(text, True, BACKGROUND if is_chosen else TEXT)
             surface.blit(image, image.get_rect(center=badge.center))
 
     def _text(self, surface: pygame.Surface, paragraphs: list[str]) -> None:

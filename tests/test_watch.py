@@ -157,6 +157,11 @@ def test_a_cell_shows_the_best_score_of_the_moves_landing_there():
     assert scores_by_cell(thoughts) == {Move.parse("c3").target: (3, False), Move.parse("d4").target: (0, False)}
 
 
+def test_a_share_of_wins_always_has_two_decimals_and_the_playouts_are_shown():
+    assert [score_text(s, share=True) for s in [1, 0, 0.5, 0.123]] == ["1.00", "0.00", "0.50", "0.12"]
+    assert work_text(Thoughts(Move(0), positions=29811, depth=2, playouts=184), 0.5) == "184 playouts, 29,811 positions, depth 2, 500.0 ms"
+
+
 def test_an_upper_bound_is_shown_with_a_sign():
     thoughts = Thoughts(
         Move.parse("c3"), scores={Move.parse("c3"): 2, Move.parse("d4"): -3}, upper_bounds=frozenset({Move.parse("d4")})
