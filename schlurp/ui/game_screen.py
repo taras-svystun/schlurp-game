@@ -53,6 +53,17 @@ def wrap(text: str, font: pygame.font.Font, width: int) -> list[str]:
     return lines + [line] if line else lines
 
 
+def fit(text: str, fonts: list[pygame.font.Font], width: int, colour=TEXT) -> pygame.Surface:
+    """`text` drawn no wider than `width`: in the first font it fits in, else in the last font, cut short with "..."."""
+    for font in fonts:
+        if font.size(text)[0] <= width:
+            return font.render(text, True, colour)
+    font = fonts[-1]
+    while text and font.size(text + "...")[0] > width:
+        text = text[:-1]
+    return font.render(text + "...", True, colour)
+
+
 class GameScreen:
     """One game on the screen. PlayScreen and WatchScreen add their own buttons, keys and drawing."""
 
@@ -160,13 +171,20 @@ class GameScreen:
             if not over and player is position.to_move:
                 pygame.draw.rect(surface, (40, 48, 52), pygame.Rect(PANEL_X - 8, y - 24, 258, 48), border_radius=10)
             view.draw_microbe(surface, (PANEL_X + 18, y), 16, LOOKS[player], now, i)
-            surface.blit(view.font.render(self.player_name(player), True, TEXT), (PANEL_X + 46, y - 10))
             count = view.font_big.render(str(position.pawns(player)), True, TEXT)
-            surface.blit(count, count.get_rect(midright=(PANEL_X + 240, y)))
-        for i, line in enumerate(wrap(self.status(), view.font, PANEL_WIDTH)):
-            surface.blit(view.font.render(line, True, TEXT), (PANEL_X, 190 + i * 24))
+            count_rect = count.get_rect(midright=(PANEL_X + 240, y))
+            name = fit(self.player_name(player), [view.font, view.font_small], count_rect.left - 10 - (PANEL_X + 46))
+            surface.blit(name, name.get_rect(midleft=(PANEL_X + 46, y)))
+            surface.blit(count, count_rect)
+        # The status takes at most 2 lines, in a smaller font if a long agent name needs it,
+        # and the last move's message comes right under it.
+        font = view.font if len(wrap(self.status(), view.font, PANEL_WIDTH)) <= 2 else view.font_small
+        y = 190
+        for line in wrap(self.status(), font, PANEL_WIDTH):
+            surface.blit(font.render(line, True, TEXT), (PANEL_X, y))
+            y += font.get_linesize()
         for i, line in enumerate(wrap(self.message, view.font_small, PANEL_WIDTH)):
-            surface.blit(view.font_small.render(line, True, TEXT_SOFT), (PANEL_X, 242 + i * 20))
+            surface.blit(view.font_small.render(line, True, TEXT_SOFT), (PANEL_X, y + 4 + i * 18))
 
     def draw_lines(self, surface: pygame.Surface, lines, top: int, spacing: int = 18) -> None:
         for i, line in enumerate(lines):
