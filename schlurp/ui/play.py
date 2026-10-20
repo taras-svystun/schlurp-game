@@ -16,7 +16,8 @@ MOVES_SHOWN = 10
 # An AI's move waits at least this long (seconds) after it starts thinking, so you see your own move land first.
 AI_MOVE_DELAY = 0.7
 # The agent that suggests a move when the person asks for a hint: the strongest we have that answers in under a second.
-HINT_AGENT = "AlphaBeta"
+# Deepening with `mix` thinks for at most half a second (see docs/agents/deepening.md).
+HINT_AGENT = "Deepening:mix"
 
 __all__ = ["PERSON", "PlayScreen", "describe", "movable_pawns", "reachable", "wrap"]
 

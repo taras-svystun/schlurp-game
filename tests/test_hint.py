@@ -9,7 +9,7 @@ import threading
 import pygame
 import pytest
 
-from schlurp.agents import Agent, AlphaBetaAgent
+from schlurp.agents import Agent, DeepeningAgent
 from schlurp.engine import Game, Move, Player, Position, cell_index
 from schlurp.ui.board_view import HEIGHT, WIDTH, cell_center
 from schlurp.ui.play import KEYS, KEYS_TOP, PANEL_WIDTH, PlayScreen
@@ -72,13 +72,13 @@ def colony_screen() -> PlayScreen:
     return screen
 
 
-def test_h_shows_the_move_alphabeta_would_play():
+def test_h_shows_the_move_deepening_would_play():
     screen = colony_screen()
 
     get_hint(screen)
 
     assert screen.hint == Move.parse("d4")
-    assert screen.message == "Hint from AlphaBeta: clone to d4."
+    assert screen.message == "Hint from Deepening:mix: clone to d4."
     assert screen.game.moves == []  # a hint only shows the move, it does not play it
 
 
@@ -142,9 +142,9 @@ def test_undo_while_the_hint_is_thinking_cancels_it():
 
 
 def test_the_hint_agent_is_never_one_of_the_players():
-    opponent = AlphaBetaAgent()
+    opponent = DeepeningAgent()
     screen = PlayScreen({BLUE: None, GREEN: opponent}, ai_move_delay=0)
-    assert isinstance(screen.hint_agent, AlphaBetaAgent)
+    assert isinstance(screen.hint_agent, DeepeningAgent)
     assert screen.hint_agent is not opponent
 
 
