@@ -91,14 +91,15 @@ What we know so far:
 - Game records are already JSON with moves in standard notation, so they work on a web page as they are.
 - Homebrew no longer builds PHP for macOS 14, so the laptop has PHP 8.4 from MacPorts. GitHub runs the tests on PHP 7.4.
 
-Steps:
+Steps (W5, the NAS, was added on 2026-10-20 at Pascal's wish, and the steps after it moved one on):
 - [x] W1. The game in the browser. A script copies our Python files into `web/`; a Web Worker loads Pyodide and answers the page's messages (new game, legal moves, play a move). A plain board to click, for two people on one computer. Check: a pytest test sends the worker's messages through Node and compares the answers with the engine; we time how long the page takes to load.
 - [x] W2. The game server in PHP: make a game with two secrets, take a move, give the moves after number n, each with the player who sent it. SQLite on the laptop. Check: pytest starts `php -S` and tries every request, including a wrong secret, an old or skipped move number and two moves sent at once. CI runs it on PHP 7.4.
 - [x] W3. Online play on Taras's laptop: one player makes a game and sends the link, the other opens it and plays. Each browser checks every move it gets. Reloading the page keeps your place in the game. Check: two browsers, then two computers on the same Wi-Fi.
 - [x] W4. The page in the microscope look: the round lens, the microbes, clone, jump and infect animations, the side panel with pawns, turn and moves. Check: screenshots at laptop and phone width.
-- [ ] W5. Online on Pascal's site: a deploy script, a config file on the server for MariaDB, a test with Pascal before telling anyone. Check: a full game between Taras and Pascal on the real address.
-- [ ] W6. Play against `Deepening:mix`: the agent thinks in its own worker, Undo and New stop it, the menu picks your colour and who starts. Check: a game against it in Chrome, Firefox and Safari, and the depth it reaches in 0.5 s.
-- [ ] W7. Hints online, from `Deepening:mix`. Check: a hint in a game between two people and in a game against the AI.
+- [ ] W5. Pascal tries it on his NAS first. He does all his hosting himself and wants to test at home before the public site; his NAS runs the same Apache, PHP and MariaDB, reached by a local address and a port. A command builds one zip he uploads by FTP, with a short install note and a `check.php` page that shows in green or red what the game needs: the PHP version, PDO with SQLite or MySQL, and a folder PHP may write to. So we need no more questions to him: the page answers them. `config.php` and the database file are kept out of reach of the browser. Check: the zip, unpacked in an empty folder and served by `php -S`, works like `schlurp web`, and its `check.php` runs on PHP 7.4 on GitHub; then Pascal plays a game between two computers at home, which also checks the Apache rules.
+- [ ] W6. Online on Pascal's site: a deploy script, a config file on the server for MariaDB, a test with Pascal before telling anyone. Check: a full game between Taras and Pascal on the real address.
+- [ ] W7. Play against `Deepening:mix`: the agent thinks in its own worker, Undo and New stop it, the menu picks your colour and who starts. Check: a game against it in Chrome, Firefox and Safari, and the depth it reaches in 0.5 s.
+- [ ] W8. Hints online, from `Deepening:mix`. Check: a hint in a game between two people and in a game against the AI.
 
 ## Later
 
