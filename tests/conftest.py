@@ -3,6 +3,7 @@
 import contextlib
 import os
 import shutil
+import signal
 import socket
 import subprocess
 import time
@@ -39,9 +40,10 @@ def php_serving(folder: Path, sqlite: Path):
         port = free.getsockname()[1]
     # Several workers, so requests sent at the same moment really run at the same moment.
     env = {**os.environ, "SCHLURP_SQLITE": str(sqlite), "PHP_CLI_SERVER_WORKERS": "4"}
+    # Its own process group, so the workers can be stopped together with the main php process.
     php = subprocess.Popen(
         ["php", "-S", f"127.0.0.1:{port}", "-t", str(folder), str(PROJECT / "schlurp" / "web_router.php")],
-        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True,
     )
     for _ in range(100):
         try:
@@ -52,7 +54,8 @@ def php_serving(folder: Path, sqlite: Path):
     try:
         yield f"http://127.0.0.1:{port}"
     finally:
-        php.terminate()
+        # terminate() would stop only the main process and leave the 4 workers running for days.
+        os.killpg(php.pid, signal.SIGTERM)
         php.wait()
 
 

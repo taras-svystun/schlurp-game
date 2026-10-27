@@ -265,3 +265,14 @@ A short, plain-English history of each finished step: what we did, why, and how.
 - The SQLite file moved from `records/` to the site's own `data/` folder, since a server may not let PHP write outside the site. `data/.htaccess` hides it on Apache; `schlurp/web_router.php` does the same under `php -S`. The database code moved to `web/database.php`, shared by `api.php` and `check.php`.
 - The zip never takes `config.php` or the database, even when `web/` has them. The note has Windows line ends and a BOM, since Pascal uses Windows.
 - Checked: macOS's own Apache 2.4 refuses `data/` with `.htaccess` (403) and serves it when `AllowOverride None` (200), and `check.php` shows that case in red. The unpacked zip served by `php -S` passes every check in Chrome and plays the online game of W3. GitHub runs `check.php` on PHP 7.4.
+
+## Fix: tests left PHP servers running (2026-10-27)
+
+**What:** the test server from `tests/conftest.py` now stops with all its processes. Before, 40 `php -S` processes from old test runs were still running after 6 days.
+
+**Why:** with `PHP_CLI_SERVER_WORKERS=4`, PHP starts one main process and 4 workers. `terminate()` stopped only the main one, so the workers were left running with no parent.
+
+**How:**
+- `Popen(..., start_new_session=True)` puts the main process and its workers in their own process group. `os.killpg(pid, SIGTERM)` stops the whole group.
+- Checked: a small script showed 5 processes, then 4 left after `terminate()`, then 0 after `killpg`. The full `pytest` run passes (279 tests) and leaves 0 `php -S` processes.
+- Still open: if pytest itself is killed hard, the cleanup code never runs. To clean up by hand: `pkill -f 'php -S 127.0.0.1:'`.
